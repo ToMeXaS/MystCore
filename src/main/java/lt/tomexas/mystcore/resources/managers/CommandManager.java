@@ -1,7 +1,5 @@
 package lt.tomexas.mystcore.resources.managers;
 
-import com.ticxo.modelengine.api.ModelEngineAPI;
-import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.resources.ResourcesMain;
 import lt.tomexas.mystcore.resources.data.trees.Tree;
 import org.bukkit.block.Block;

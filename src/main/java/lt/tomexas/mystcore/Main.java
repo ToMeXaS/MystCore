@@ -4,6 +4,7 @@ import co.aikar.commands.PaperCommandManager;
 import com.bgsoftware.superiorskyblock.api.SuperiorSkyblockAPI;
 import com.bgsoftware.superiorskyblock.api.island.Island;
 import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
+import lombok.Getter;
 import lt.tomexas.mystcore.listeners.BlockBreakListener;
 import lt.tomexas.mystcore.listeners.EntityDamageByEntityListener;
 import lt.tomexas.mystcore.listeners.PlayerJoinListener;
@@ -22,15 +23,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public final class Main extends JavaPlugin {
 
+    @Getter
     private static Main instance;
+    @Getter
     private Database database;
+    @Getter
     private ResourcesDatabase resourcesDatabase;
+    @Getter
     private PlayerFontImage playerFontImage;
 
     @Override
@@ -96,6 +105,7 @@ public final class Main extends JavaPlugin {
     private void registerCommands() {
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new MystResourcesCommand());
+        manager.getCommandCompletions().registerAsyncCompletion("treeIds", c -> getTreeFileNames());
     }
 
     private void registerPlaceholders() {
@@ -156,19 +166,13 @@ public final class Main extends JavaPlugin {
         }
     }
 
-    public static Main getInstance() {
-        return instance;
-    }
-
-    public PlayerFontImage getPlayerFontImage() {
-        return playerFontImage;
-    }
-
-    public Database getDatabase() {
-        return database;
-    }
-
-    public ResourcesDatabase getResourcesDatabase() {
-        return resourcesDatabase;
+    private List<String> getTreeFileNames() {
+        File treesFolder = new File(getDataFolder(), "trees");
+        if (!treesFolder.isDirectory()) return Collections.emptyList();
+        File[] files = treesFolder.listFiles(File::isFile);
+        if (files == null) return Collections.emptyList();
+        return Arrays.stream(files)
+                .map(File::getName)
+                .collect(Collectors.toList());
     }
 }
