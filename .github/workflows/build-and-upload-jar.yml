@@ -97,6 +97,12 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
+      - name: Get Jar file name
+        id: get_jar
+        run: |
+          jar_name=$(ls artifacts/*.jar | head -n 1 | xargs -n 1 basename)
+          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
+
       - name: Send Discord Webhook on Build Failure
         if: failure()
         env:
@@ -156,6 +162,7 @@ jobs:
           AUTHOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
+          JAR_NAME: ${{ steps.get_jar.outputs.jar_name }}
         run: |
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
@@ -163,6 +170,7 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
           json=$(jq -n \
           --arg title "✅ Build Successful" \
           --arg author "$AUTHOR" \
@@ -171,6 +179,8 @@ jobs:
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
           --arg duration "${DURATION}s" \
           --arg timestamp "$TIMESTAMP" \
+          --arg jar "$JAR_NAME" \
+          --arg jar_size "$JAR_SIZE" \
           '{
             embeds: [{
               title: $title,
@@ -185,18 +195,25 @@ jobs:
                 { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                { name: "Jar File", value: "`\($jar)`", inline: true }, 
                 { name: "Build Duration", value: "`\($duration)`", inline: true },
+                {
+                    name: "File Size",
+                    value: ($jar_size | tonumber as $size |
+                      if $size < 1024 then
+                      ("`" + ($size | tostring) + " bytes`")
+                      elif $size < 1024 * 1024 then
+                      ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
+                      else
+                      ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
+                      end),
+                    inline: true
+                  },
               ],
               footer: { text: "Built via GitHub Actions" }
             }]
           }')
           curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
-
-      - name: Get Jar file name
-        id: get_jar
-        run: |
-          jar_name=$(ls artifacts/*.jar | head -n 1 | xargs -n 1 basename)
-          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
       - name: Upload JAR to SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.6
@@ -266,6 +283,7 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
           json=$(jq -n \
           --arg title "📤 Upload Successful" \
           --arg author "$AUTHOR" \
@@ -273,6 +291,7 @@ jobs:
           --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
           --arg jar "$JAR_NAME" \
+          --arg jar_size "$JAR_SIZE" \
           --arg timestamp "$TIMESTAMP" \
           '{
             embeds: [{
@@ -288,7 +307,19 @@ jobs:
                 { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: "Jar File", value: "`\($jar)`", inline: true }
+                { name: "Jar File", value: "`\($jar)`", inline: true },
+                {
+                    name: "File Size",
+                    value: ($jar_size | tonumber as $size |
+                      if $size < 1024 then
+                      ("`" + ($size | tostring) + " bytes`")
+                      elif $size < 1024 * 1024 then
+                      ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
+                      else
+                      ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
+                      end),
+                    inline: true
+                  }
               ],
               footer: { text: "Uploaded via GitHub Actions" }
             }]
