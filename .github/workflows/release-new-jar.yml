@@ -20,14 +20,6 @@ jobs:
       - name: Record start time
         run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
-      - name: Get last commit message and short SHA
-        id: git-info
-        run: |
-          echo "msg<<EOF" >> $GITHUB_OUTPUT
-          git log -1 --pretty=%B
-          echo "EOF" >> $GITHUB_OUTPUT
-          echo "sha=$(git rev-parse --short $GITHUB_SHA)" >> $GITHUB_OUTPUT
-
       - uses: actions/setup-java@v4
         with:
           java-version: '21'
@@ -62,13 +54,13 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          COMMIT_MSG: ${{ steps.git-info.outputs.msg }}
           AUTHOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
+          COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
@@ -114,7 +106,6 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          COMMIT_MSG: ${{ steps.git-info.outputs.msg }}
           AUTHOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
@@ -125,6 +116,7 @@ jobs:
           DURATION=$((END_TIME - START_TIME))
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
+          COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           ARTIFACT_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
@@ -135,7 +127,7 @@ jobs:
           --arg repo "$REPO" --arg repo_url "$REPO_URL" \
           --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-          --arg message "$COMMIT_MSG" --arg jar "$JAR_NAME" \
+          --arg commit_message "$COMMIT_MESSAGE" \
           --arg size "$ARTIFACT_SIZE" --arg duration "${DURATION}s" \
           --arg timestamp "$TIMESTAMP" \
           '{
@@ -154,8 +146,19 @@ jobs:
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
                 { name: "Jar File", value: "`\($jar)`", inline: true },
                 { name: "Build Duration", value: "`\($duration)`", inline: true },
-                { name: "File Size (bytes)", value: "`\($size)`", inline: true },
-                { name: "Message", value: "```\($message)```", inline: false }
+                {
+                      name: "File Size",
+                      value: ($ARTIFACT_SIZE | tonumber as $size |
+                        if $size < 1024 then
+                        ("`" + ($size | tostring) + " bytes`")
+                        elif $size < 1024 * 1024 then
+                        ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
+                        else
+                        ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
+                        end),
+                      inline: true
+                    },
+                { name: "Message", value: "```\($commit_message)```", inline: false }
               ],
               footer: { text: "Built and uploaded via GitHub Actions" }
             }]
