@@ -168,6 +168,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           VERSION: ${{ env.VERSION }}
           GIT_HASH: ${{ env.git_hash }}
+          JAR_NAME: ${{ env.JAR_NAME }}
           AUTHOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
@@ -181,7 +182,6 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          JAR_NAME={{ env.JAR_NAME }}
           JAR_URL="https://github.com/$REPO/releases/download/$GIT_HASH/$JAR_NAME"
           ARTIFACT_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
