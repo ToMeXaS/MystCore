@@ -312,7 +312,7 @@ jobs:
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
                 { name: "Jar File", value: "`\($jar)`", inline: true },
-                { name: "Jar & Size", value: "`\($jar)` (\($jar_size | tonumber as $size |
+                { name: "Jar & Size", value: "`\($jar) (\($jar_size | tonumber as $size |
                   if $size < 1024 then
                     ($size | tostring) + " bytes"
                   elif $size < 1024 * 1024 then
@@ -321,7 +321,7 @@ jobs:
                     ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB"
                   end
                 ))`", inline: true },
-                { name: "From → To", value: "`\($from)`\n→\n`\($to)`", inline: true }
+                { name: "From → To", value: "`\($from)` → `\($to)`", inline: false }
               ],
               footer: { text: "Uploaded via GitHub Actions" }
             }]
