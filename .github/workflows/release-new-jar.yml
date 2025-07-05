@@ -17,6 +17,53 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Send Discord Webhook on Commit
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GIT_HASH: ${{ github.sha }}
+          AUTHOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
+          COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
+          REPO_URL="https://github.com/$REPO"
+          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+
+          json=$(jq -n \
+          --arg title "📦 New Commit Pushed" \
+          --arg repo "$REPO" \
+          --arg repo_url "$REPO_URL" \
+          --arg branch "$BRANCH" \
+          --arg branch_url "$BRANCH_URL" \
+          --arg commit "$GIT_HASH" \
+          --arg commit_url "$COMMIT_URL" \
+          --arg commit_message "$COMMIT_MESSAGE" \
+          --arg author "$AUTHOR" \
+          --arg timestamp "$TIMESTAMP" \
+          '{
+            embeds: [{
+              title: $title,
+              color: 3447003,
+              timestamp: $timestamp,
+              author: {
+                name: $author,
+                url: "https://github.com/\($author)",
+                icon_url: "https://github.com/\($author).png"
+              },
+              fields: [
+                { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
+                { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
+                { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                { name: "Message", value: "```\($commit_message)```", inline: false }
+              ],
+              footer: { text: "Commit detected by GitHub Actions" }
+            }]
+          }')
+
+          curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
+
       - name: Record start time
         run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
@@ -64,7 +111,6 @@ jobs:
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
@@ -76,7 +122,6 @@ jobs:
           --arg branch_url "$BRANCH_URL" \
           --arg commit "$GIT_HASH" \
           --arg commit_url "$COMMIT_URL" \
-          --arg commit_message "$COMMIT_MESSAGE" \
           --arg author "$AUTHOR" \
           --arg timestamp "$TIMESTAMP" \
           '{
@@ -94,7 +139,6 @@ jobs:
                   { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                   { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                   { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                  { name: "Message", value: "```\($commit_message)```", inline: false }
                 ],
                 footer: {
                   text: "Failed Job via GitHub Actions"
@@ -120,7 +164,6 @@ jobs:
           DURATION=$((END_TIME - START_TIME))
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           ARTIFACT_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
@@ -131,7 +174,6 @@ jobs:
           --arg repo "$REPO" --arg repo_url "$REPO_URL" \
           --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-          --arg commit_message "$COMMIT_MESSAGE" \
           --arg jar "$JAR_NAME" \
           --arg size "$ARTIFACT_SIZE" --arg duration "${DURATION}s" \
           --arg timestamp "$TIMESTAMP" \
@@ -152,18 +194,17 @@ jobs:
                 { name: "Jar File", value: "`\($jar)`", inline: true },
                 { name: "Build Duration", value: "`\($duration)`", inline: true },
                 {
-                      name: "File Size",
-                      value: ($size | tonumber as $size |
-                        if $size < 1024 then
-                        ("`" + ($size | tostring) + " bytes`")
-                        elif $size < 1024 * 1024 then
-                        ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
-                        else
-                        ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
-                        end),
-                      inline: true
-                    },
-                { name: "Message", value: "```\($commit_message)```", inline: false }
+                    name: "File Size",
+                    value: ($size | tonumber as $size |
+                      if $size < 1024 then
+                      ("`" + ($size | tostring) + " bytes`")
+                      elif $size < 1024 * 1024 then
+                      ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
+                      else
+                      ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
+                      end),
+                    inline: true
+                  }
               ],
               footer: { text: "Built and uploaded via GitHub Actions" }
             }]
