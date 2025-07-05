@@ -264,18 +264,21 @@ jobs:
                -d "$json" \
                "$DISCORD_WEBHOOK_URL"
 
-      - name: Update gradle.properties
+      - name: Update gradle.properties and plugin.yml
         run: |
           # Update the version in gradle.properties
           sed -i 's/^version=.*/version=${{ env.VERSION }}/' gradle.properties
-          
+
+          # Update the version in plugin.yml
+          sed -i 's/^version: .*/version: ${{ env.VERSION }}/' src/main/resources/plugin.yml
+
           # Configure Git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
+
           # Commit and push changes
-          git add gradle.properties
-          git commit -m "Update version in gradle.properties"
+          git add gradle.properties src/main/resources/plugin.yml
+          git commit -m "Update version to ${{ env.VERSION }}"
           git push origin ${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
