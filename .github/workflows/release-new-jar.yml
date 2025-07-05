@@ -122,6 +122,7 @@ jobs:
           AUTHOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
@@ -138,6 +139,7 @@ jobs:
           --arg commit_url "$COMMIT_URL" \
           --arg author "$AUTHOR" \
           --arg timestamp "$TIMESTAMP" \
+          --arg run_url "$GITHUB_RUN_URL" \
           '{
             embeds: [
               {
@@ -152,7 +154,8 @@ jobs:
                 fields: [
                   { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                   { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                  { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true }
+                  { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                  { name: "Actions Run", value: "[View Run](\($commit_url))", inline: false }
                 ],
                 footer: {
                   text: "Failed Job via GitHub Actions"

@@ -63,8 +63,7 @@ public class TreeChopperManager {
     }
 
     private void handleTask() {
-        if (!playerHarvestingTree.isEmpty()) return;
-
+        if (choppingTask != null && !choppingTask.isCancelled()) return;
         this.choppingTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -222,8 +221,7 @@ public class TreeChopperManager {
         RayTraceResult rayTrace = player.rayTraceBlocks(3.0);
         if (rayTrace == null || !tree.getBarrierBlocks().contains(rayTrace.getHitBlock())) {
             player.sendMessage("§cYou stopped chopping the tree!");
-            playerTimers.get(player.getUniqueId()).cancel();
-            playerTimers.remove(player.getUniqueId());
+            playerHarvestingTree.remove(player.getUniqueId());
             return false;
         }
 
@@ -265,6 +263,7 @@ public class TreeChopperManager {
                 playerHarvestingTree.remove(player.getUniqueId());
                 setTreeGlow(entityId, false);
                 glowingTrees.remove(entityId);
+                hitCounts.remove(entityId);
                 player.sendMessage("§cYou took too long to chop down the tree. Progress has been reset!");
             }
         };
