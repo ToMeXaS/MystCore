@@ -70,7 +70,8 @@ tasks.withType(JavaCompile).configureEach {
 
     options.compilerArgs += ["-parameters"]
     options.fork = true
-    options.forkOptions.executable = System.getProperty("java.home") + "/bin/javac.exe"
+    def isWindows = org.gradle.internal.os.OperatingSystem.current().isWindows()
+    options.forkOptions.executable = System.getProperty("java.home") + "/bin/javac" + (isWindows ? ".exe" : "")
 }
 
 shadowJar {
