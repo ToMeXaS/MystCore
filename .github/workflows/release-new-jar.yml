@@ -1,4 +1,4 @@
-name: Release and Upload Jar
+name: Build and Upload New JAR
 
 on:
   push:
@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  build_release:
+  build-and-upload:
+    name: Build and Upload New JAR
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -26,15 +27,6 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=%B)
           echo "msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
 
-      - name: Cancel Job
-        if: |
-          !contains(steps.commit.outputs.msg, '#patch') &&
-          !contains(steps.commit.outputs.msg, '#minor') &&
-          !contains(steps.commit.outputs.msg, '#major')
-        run: |
-          echo "🛑 No version flag found, cancelling..."
-          exit 1
-
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
@@ -47,32 +39,14 @@ jobs:
       - name: Set execute permission for Gradle wrapper
         run: chmod +x ./gradlew
 
-      - name: Build with Gradle (Patch)
-        if: contains(steps.commit.outputs.msg, '#patch')
+      - name: Build with Gradle
         run: |
-          ./gradlew releasePatchJar
-          git_hash=$(git rev-parse --short "$GITHUB_SHA")
-          echo "git_hash=$git_hash" >> $GITHUB_ENV
-
-      - name: Build with Gradle (Minor)
-        if: contains(steps.commit.outputs.msg, '#minor')
-        run: |
-          ./gradlew releaseMinorJar
-          git_hash=$(git rev-parse --short "$GITHUB_SHA")
-          echo "git_hash=$git_hash" >> $GITHUB_ENV
-
-      - name: Build with Gradle (Major)
-        if: contains(steps.commit.outputs.msg, '#major')
-        run: |
-          ./gradlew releaseMajorJar
+          ./gradlew build
           git_hash=$(git rev-parse --short "$GITHUB_SHA")
           echo "git_hash=$git_hash" >> $GITHUB_ENV
 
       - name: Send Discord Webhook on Failure
-        if: |
-          (contains(steps.commit.outputs.msg, '#patch') ||
-           contains(steps.commit.outputs.msg, '#minor') ||
-           contains(steps.commit.outputs.msg, '#major')) && failure()
+        if: failure()
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           GIT_HASH: ${{ env.git_hash }}
@@ -127,12 +101,6 @@ jobs:
                -d "$json" \
                "$DISCORD_WEBHOOK_URL"
 
-      - name: Read version from gradle.properties
-        id: get_version
-        run: |
-          version=$(grep "^version=" gradle.properties | cut -d '=' -f2)
-          echo "VERSION=$version" >> $GITHUB_ENV
-
       - name: Get Jar file name
         id: get_jar_name
         run: |
@@ -166,7 +134,6 @@ jobs:
       - name: Send Discord Webhook
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          VERSION: ${{ env.VERSION }}
           GIT_HASH: ${{ env.git_hash }}
           JAR_NAME: ${{ env.JAR_NAME }}
           AUTHOR: ${{ github.actor }}
@@ -186,10 +153,9 @@ jobs:
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
           json=$(jq -n \
-            --arg title "🛠️ New Release" \
+            --arg title "✅ Build Successful" \
             --arg repo "$REPO" \
             --arg repo_url "$REPO_URL" \
-            --arg version "$VERSION" \
             --arg branch "$BRANCH" \
             --arg branch_url "$BRANCH_URL" \
             --arg commit "$GIT_HASH" \
@@ -218,7 +184,7 @@ jobs:
                     { name: "Repository", value: ("["+ $repo +"]("+ $repo_url +")"), inline: true },
                     { name: "Branch", value: ("["+ $branch +"]("+ $branch_url +")"), inline: true },
                     { name: "Commit", value: ("[" + $commit + "](" + $commit_url + ")"), inline: true },
-                    { name: "Version", value: ("`"+ $version +"`"), inline: true },
+                    { name: "Jar File", value: ("`" + $jar_name + "`"), inline: true },
                     {
                       name: "Build Duration",
                       value: (
@@ -251,7 +217,7 @@ jobs:
                     { name: "Message", value: ("```"+ $commit_message +"```"), inline: false }
                   ],
                   footer: {
-                    text: "Released via GitHub Actions"
+                    text: "Uploaded via GitHub Actions"
                   }
                 }
               ]
@@ -261,22 +227,3 @@ jobs:
                -X POST \
                -d "$json" \
                "$DISCORD_WEBHOOK_URL"
-
-      - name: Update gradle.properties and plugin.yml
-        run: |
-          # Update the version in gradle.properties
-          sed -i 's/^version=.*/version=${{ env.VERSION }}/' gradle.properties
-
-          # Update the version in plugin.yml
-          sed -i 's/^version: .*/version: ${{ env.VERSION }}/' src/main/resources/plugin.yml
-
-          # Configure Git
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Commit and push changes
-          git add gradle.properties src/main/resources/plugin.yml
-          git commit -m "Update version to ${{ env.VERSION }}"
-          git push origin ${{ github.ref_name }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
