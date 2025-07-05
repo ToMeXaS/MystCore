@@ -182,7 +182,6 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          JAR_URL="https://github.com/$REPO/releases/download/$GIT_HASH/$JAR_NAME"
           ARTIFACT_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -249,8 +248,7 @@ jobs:
                         end),
                       inline: true
                     },
-                    { name: "Message", value: ("```"+ $commit_message +"```"), inline: false },
-                    { name: "Download Jar", value: ("[⬇️ " + $jar_name + "](" + $jar_url + ")"), inline: false }
+                    { name: "Message", value: ("```"+ $commit_message +"```"), inline: false }
                   ],
                   footer: {
                     text: "Released via GitHub Actions"
