@@ -17,10 +17,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Get Git SHA
+        id: git-info
+        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Send Discord Webhook on Commit
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GIT_HASH: ${{ github.sha }}
+          GIT_HASH: ${{ steps.git-info.outputs.sha }}
           AUTHOR: ${{ github.actor }}
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
@@ -30,6 +34,10 @@ jobs:
           COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          
+          # Get changed files
+          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "$GIT_HASH" | head -n 20 | sed 's/^/- `/;s/$/`/' | paste -sd '\\n' -)
+          if [ -z "$CHANGED_FILES" ]; then CHANGED_FILES="No files changed."; fi
 
           json=$(jq -n \
           --arg title "📦 New Commit Pushed" \
@@ -42,6 +50,7 @@ jobs:
           --arg commit_message "$COMMIT_MESSAGE" \
           --arg author "$AUTHOR" \
           --arg timestamp "$TIMESTAMP" \
+          --arg changed "$CHANGED_FILES" \
           '{
             embeds: [{
               title: $title,
@@ -56,6 +65,7 @@ jobs:
                 { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                { name: "Changed Files", value: $changed, inline: false },
                 { name: "Message", value: "```\($commit_message)```", inline: false }
               ],
               footer: { text: "Commit detected by GitHub Actions" }
@@ -84,10 +94,6 @@ jobs:
         run: |
           jar_name=$(ls artifacts/*.jar | head -n 1 | xargs -n 1 basename)
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
-
-      - name: Get Git SHA
-        id: git-info
-        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Upload JAR to SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.6
