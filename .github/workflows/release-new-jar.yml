@@ -142,12 +142,13 @@ jobs:
       - name: Upload JAR to SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
-          host: ${{ secrets.SFTP_HOST }}
           username: ${{ secrets.SFTP_USER }}
+          server: ${{ secrets.SFTP_HOST }}
           password: ${{ secrets.SFTP_PASS }}
           port: ${{ secrets.SFTP_PORT }}
-          source: "artifacts/${{ env.JAR_NAME }}"
-          target: "/plugins"
+          local_path: "artifacts/${{ env.JAR_NAME }}"
+          remote_path: "/plugins"
+          sftp_only: true
 
       # - name: Create a Release and Upload artifacts
       #   env:
