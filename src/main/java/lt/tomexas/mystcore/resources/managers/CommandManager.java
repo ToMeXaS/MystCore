@@ -32,6 +32,7 @@ public final class CommandManager {
         player.sendMessage("§e/mr gettreespawner <id> §7- Get tree spawner item for the given ID");
         player.sendMessage("§e/mr removetree §7- Removes tree you're looking at");
         player.sendMessage("§e/mr setrespawntime <respawn_time_in_seconds> §7- Set respawn time for the tree you're looking at");
+        player.sendMessage("");
     }
 
     /**
