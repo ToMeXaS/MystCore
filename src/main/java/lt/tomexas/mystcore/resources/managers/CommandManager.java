@@ -58,8 +58,7 @@ public final class CommandManager {
         player.sendMessage("§aGiven tree spawner item!");
     }
 
-    public static void handleRemoveTree(Player player, String[] args) {
-        UUID uuid = UUID.fromString(args[1]);
+    public static void handleRemoveTree(Player player, UUID uuid) {
         BaseEntity<?> entity = ModelEngineAPI.getModeledEntity(uuid).getBase();
         if (TreeData.hasTree(uuid)) {
             TreeData.removeTree(uuid);
@@ -75,20 +74,18 @@ public final class CommandManager {
      * Handles the "setrespawntime" command.
      *
      * @param player the player executing the command
-     * @param args   the command arguments
+     * @param uuid   the UUID of the tree entity
      */
-    public static void handleSetRespawnTime(Player player, String[] args) {
-        if (!validateArgsLength(player, args, 2, "Usage: /mr setrespawntime <respawn_time>")) return;
+    public static void handleSetRespawnTime(Player player, UUID uuid, String time) {
 
-        int respawnTime = parseInteger(args[1], "respawn time", player);
+        int respawnTime = parseInteger(time, "respawn time", player);
         if (respawnTime == -1) {
             player.sendMessage("§cInvalid respawn time! It must be a positive integer.");
             return;
         }
 
-        Entity targetEntity = player.getTargetEntity(10);
-        if (targetEntity != null && TreeData.hasTree(targetEntity.getUniqueId())) {
-            TreeData tree = TreeData.getTree(targetEntity.getUniqueId());
+        if (TreeData.hasTree(uuid)) {
+            TreeData tree = TreeData.getTree(uuid);
             if (tree == null) {
                 player.sendMessage("§cThe targeted tree is not valid or does not exist!");
                 return;

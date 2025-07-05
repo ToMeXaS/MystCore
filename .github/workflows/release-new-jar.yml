@@ -35,9 +35,13 @@ jobs:
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
-          # Get changed files
-          CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r "$GIT_HASH" | head -n 20 | sed 's/^/- `/;s/$/`/' | paste -sd '\\n' -)
-          if [ -z "$CHANGED_FILES" ]; then CHANGED_FILES="No files changed."; fi
+          # Get changed files as a Bash array
+          mapfile -t CHANGED_FILES < <(git diff-tree --no-commit-id --name-only -r "$GIT_HASH" | head -n 20)
+          if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
+          CHANGED_FILES_LIST="No files changed."
+          else
+          CHANGED_FILES_LIST=$(printf -- "- \`%s\`\n" "${CHANGED_FILES[@]}")
+          fi
 
           json=$(jq -n \
           --arg title "📦 New Commit Pushed" \
@@ -50,7 +54,7 @@ jobs:
           --arg commit_message "$COMMIT_MESSAGE" \
           --arg author "$AUTHOR" \
           --arg timestamp "$TIMESTAMP" \
-          --arg changed "$CHANGED_FILES" \
+          --arg changed "$CHANGED_FILES_LIST" \
           '{
             embeds: [{
               title: $title,

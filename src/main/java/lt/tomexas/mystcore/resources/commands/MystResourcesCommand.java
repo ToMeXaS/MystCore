@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
+import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.resources.managers.CommandManager;
 import org.bukkit.entity.*;
 
@@ -22,12 +23,22 @@ public class MystResourcesCommand extends BaseCommand {
     }
 
     @Subcommand("removetree")
-    public void onRemoveTree(Player player, String uuid) {
-        CommandManager.handleRemoveTree(player, new String[] {uuid});
+    public void onRemoveTree(Player player) {
+        Entity entity = player.getTargetEntity(10, false);
+        if (!(entity instanceof Dummy<?> dummy)) {
+            player.sendMessage("§cYou must be looking at a tree to remove it!");
+            return;
+        }
+        CommandManager.handleRemoveTree(player, dummy.getUUID());
     }
 
     @Subcommand("setrespawntime")
-    public void onSetRespawnTime(Player player, String uuid, int time) {
-        CommandManager.handleSetRespawnTime(player, new String[] {uuid, String.valueOf(time)});
+    public void onSetRespawnTime(Player player, int time) {
+        Entity entity = player.getTargetEntity(10, false);
+        if (!(entity instanceof Dummy<?> dummy)) {
+            player.sendMessage("§cYou must be looking at a tree to remove it!");
+            return;
+        }
+        CommandManager.handleSetRespawnTime(player, dummy.getUUID(), String.valueOf(time));
     }
 }
