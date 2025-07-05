@@ -73,28 +73,40 @@ jobs:
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
           json=$(jq -n \
-            --arg title "❌ Build Failed" \
-            --arg author "$AUTHOR" \
-            --arg repo "$REPO" --arg repo_url "$REPO_URL" \
-            --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
-            --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-            --arg message "$COMMIT_MSG" --arg timestamp "$TIMESTAMP" \
-            '{
-              embeds: [{
+          --arg title "❌ Build Failed" \
+          --arg repo "$REPO" \
+          --arg repo_url "$REPO_URL" \
+          --arg branch "$BRANCH" \
+          --arg branch_url "$BRANCH_URL" \
+          --arg commit "$GIT_HASH" \
+          --arg commit_url "$COMMIT_URL" \
+          --arg commit_message "$COMMIT_MESSAGE" \
+          --arg author "$AUTHOR" \
+          --arg timestamp "$TIMESTAMP" \
+          '{
+            embeds: [
+              {
                 title: $title,
                 color: 15158332,
                 timestamp: $timestamp,
-                author: { name: $author, url: "https://github.com/" + $author, icon_url: "https://github.com/" + $author + ".png" },
+                author: {
+                  name: $author,
+                  url: ("https://github.com/\($author)"),
+                  icon_url: ("https://github.com/\($author).png")
+                },
                 fields: [
-                  { name: "Repository", value: "[" + $repo + "](" + $repo_url + ")", inline: true },
-                  { name: "Branch", value: "[" + $branch + "](" + $branch_url + ")", inline: true },
-                  { name: "Commit", value: "[" + $commit + "](" + $commit_url + ")", inline: true },
-                  { name: "Message", value: "```" + $message + "```" }
+                  { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
+                  { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
+                  { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                  { name: "Message", value: "```\($commit_message)```", inline: false }
                 ],
-                footer: { text: "Failed Job via GitHub Actions" }
-              }]
-            }')
-          
+                footer: {
+                  text: "Failed Job via GitHub Actions"
+                }
+              }
+            ]
+          }')
+  
           curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
 
       - name: Send Discord Webhook on Success
@@ -118,31 +130,35 @@ jobs:
           ARTIFACT_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
 
           json=$(jq -n \
-            --arg title "✅ Build and Upload Successful" \
-            --arg author "$AUTHOR" \
-            --arg repo "$REPO" --arg repo_url "$REPO_URL" \
-            --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
-            --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-            --arg message "$COMMIT_MSG" --arg jar "$JAR_NAME" \
-            --arg size "$ARTIFACT_SIZE" --arg duration "${DURATION}s" \
-            --arg timestamp "$TIMESTAMP" \
-            '{
-              embeds: [{
-                title: $title,
-                color: 3066993,
-                timestamp: $timestamp,
-                author: { name: $author, url: "https://github.com/" + $author, icon_url: "https://github.com/" + $author + ".png" },
-                fields: [
-                  { name: "Repository", value: "[" + $repo + "](" + $repo_url + ")", inline: true },
-                  { name: "Branch", value: "[" + $branch + "](" + $branch_url + ")", inline: true },
-                  { name: "Commit", value: "[" + $commit + "](" + $commit_url + ")", inline: true },
-                  { name: "Jar File", value: $jar, inline: true },
-                  { name: "Build Duration", value: $duration, inline: true },
-                  { name: "File Size (bytes)", value: $size, inline: true },
-                  { name: "Message", value: "```" + $message + "```" }
-                ],
-                footer: { text: "Built and uploaded via GitHub Actions" }
-              }]
-            }')
-
+          --arg title "✅ Build and Upload Successful" \
+          --arg author "$AUTHOR" \
+          --arg repo "$REPO" --arg repo_url "$REPO_URL" \
+          --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
+          --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
+          --arg message "$COMMIT_MSG" --arg jar "$JAR_NAME" \
+          --arg size "$ARTIFACT_SIZE" --arg duration "${DURATION}s" \
+          --arg timestamp "$TIMESTAMP" \
+          '{
+            embeds: [{
+              title: $title,
+              color: 3066993,
+              timestamp: $timestamp,
+              author: {
+                name: $author,
+                url: "https://github.com/\($author)",
+                icon_url: "https://github.com/\($author).png"
+              },
+              fields: [
+                { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
+                { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
+                { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                { name: "Jar File", value: $jar, inline: true },
+                { name: "Build Duration", value: $duration, inline: true },
+                { name: "File Size (bytes)", value: $size, inline: true },
+                { name: "Message", value: "```\($message)```" }
+              ],
+              footer: { text: "Built and uploaded via GitHub Actions" }
+            }]
+          }')
+  
           curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
