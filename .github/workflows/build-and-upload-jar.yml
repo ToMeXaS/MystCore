@@ -208,7 +208,7 @@ jobs:
                       ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
                       end),
                     inline: true
-                  },
+                  }
               ],
               footer: { text: "Built via GitHub Actions" }
             }]
