@@ -143,7 +143,7 @@ jobs:
                   { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                   { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                   { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                  { name: " ", value: "[\[View Run Action\]](\($run_url))", inline: false }
+                  { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
                 ],
                 footer: {
                   text: "Failed Job via GitHub Actions"
@@ -211,7 +211,7 @@ jobs:
                       end),
                     inline: true
                   },
-                { name: " ", value: "[\[View Run Action\]](\($run_url))", inline: false }
+                { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
               ],
               footer: { text: "Built via GitHub Actions" }
             }]
@@ -265,7 +265,7 @@ jobs:
                 { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: " ", value: "[\[View Run Action\]](\($run_url))", inline: false }
+                { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
               ],
               footer: { text: "Upload failed via GitHub Actions" }
             }]
@@ -326,7 +326,7 @@ jobs:
                   end
                 ))`", inline: true },
                 { name: "From → To", value: "`\($from)` → `\($to)`", inline: true },
-                { name: " ", value: "[\[View Run Action\]](\($run_url))", inline: false }
+                { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
               ],
               footer: { text: "Uploaded via GitHub Actions" }
             }]
