@@ -278,6 +278,8 @@ jobs:
           REPO: ${{ github.repository }}
           BRANCH: ${{ github.ref_name }}
           JAR_NAME: ${{ steps.get_jar.outputs.jar_name }}
+          FROM_DIR: artifacts/
+          TO_DIR: /plugins
         run: |
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
@@ -292,6 +294,8 @@ jobs:
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
           --arg jar "$JAR_NAME" \
           --arg jar_size "$JAR_SIZE" \
+          --arg from "$FROM_DIR" \
+          --arg to "$TO_DIR" \
           --arg timestamp "$TIMESTAMP" \
           '{
             embeds: [{
@@ -319,7 +323,9 @@ jobs:
                       ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
                       end),
                     inline: true
-                  }
+                  },
+                  { name: "From", value: "`\($from)`", inline: true },
+                  { name: "To", value: "`\($to)`", inline: true }
               ],
               footer: { text: "Uploaded via GitHub Actions" }
             }]
