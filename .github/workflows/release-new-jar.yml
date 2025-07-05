@@ -128,6 +128,7 @@ jobs:
           --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
           --arg commit_message "$COMMIT_MESSAGE" \
+          --arg jar "$JAR_NAME" \
           --arg size "$ARTIFACT_SIZE" --arg duration "${DURATION}s" \
           --arg timestamp "$TIMESTAMP" \
           '{
@@ -148,7 +149,7 @@ jobs:
                 { name: "Build Duration", value: "`\($duration)`", inline: true },
                 {
                       name: "File Size",
-                      value: ($ARTIFACT_SIZE | tonumber as $size |
+                      value: ($size | tonumber as $size |
                         if $size < 1024 then
                         ("`" + ($size | tostring) + " bytes`")
                         elif $size < 1024 * 1024 then
