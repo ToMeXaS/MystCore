@@ -7,7 +7,7 @@ import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.resources.data.trees.Axe;
 import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.TreeData;
+import lt.tomexas.mystcore.resources.data.trees.Tree;
 import net.Indyuce.mmocore.MMOCore;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;
@@ -36,7 +36,7 @@ public class TreeChopperManager {
     private final Map<UUID, UUID> healthDisplay = new HashMap<>();
 
     public void startChopping(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
         if (player == null || entityId == null) {
             logger.warning("Invalid player or entityId provided.");
@@ -82,7 +82,7 @@ public class TreeChopperManager {
                     resetInactivityTimer(player, entityId);
 
                     int hits = hitCounts.getOrDefault(entityId, 0);
-                    TreeData tree = TreeData.getTree(entityId);
+                    Tree tree = Tree.getTree(entityId);
                     if (tree == null) continue;
                     Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
                     Axe axe = getPlayerAxe(player, tree.getAxes());
@@ -109,7 +109,7 @@ public class TreeChopperManager {
     }
 
     private void chopTree(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
         Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
         if (skill == null) return;
@@ -175,7 +175,7 @@ public class TreeChopperManager {
     }
 
     private void handleCriticalHit(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
         player.sendMessage("§c§l*CRITICAL HIT*");
         Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
@@ -191,7 +191,7 @@ public class TreeChopperManager {
     }
 
     private boolean isChoppedDown(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return false;
         if (tree.isChopped()) {
             player.sendMessage("§cTree already chopped down!");
@@ -201,7 +201,7 @@ public class TreeChopperManager {
     }
 
     private boolean isPlayerOnline(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (!player.isOnline() && tree != null) {
             playerTimers.get(player.getUniqueId()).cancel();
             playerTimers.remove(player.getUniqueId());
@@ -217,7 +217,7 @@ public class TreeChopperManager {
     }
 
     private boolean isPlayerTargetingTree(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return false;
         RayTraceResult rayTrace = player.rayTraceBlocks(3.0);
         if (rayTrace == null || !tree.getBarrierBlocks().contains(rayTrace.getHitBlock())) {
@@ -231,7 +231,7 @@ public class TreeChopperManager {
     }
 
     private boolean isTreeGlowing(UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return false;
         if (glowingTrees.containsKey(entityId)) {
             return false; // Already glowing
@@ -280,7 +280,7 @@ public class TreeChopperManager {
         }
     }
 
-    private IAnimationProperty playTreeFallAnimation(TreeData tree) {
+    private IAnimationProperty playTreeFallAnimation(Tree tree) {
         return ModelEngineAPI.getModeledEntity(tree.getUuid())
                 .getModel(tree.getModelId())
                 .orElseThrow(() -> new IllegalStateException("Model not found!"))
@@ -288,7 +288,7 @@ public class TreeChopperManager {
                 .playAnimation("fall", 0.3, 0.3, 1, true);
     }
 
-    private void scheduleTreeRespawn(TreeData tree, IAnimationProperty animation) {
+    private void scheduleTreeRespawn(Tree tree, IAnimationProperty animation) {
         UUID entityId = tree.getUuid();
         new BukkitRunnable() {
             private int timer = 0;
@@ -312,7 +312,7 @@ public class TreeChopperManager {
         }.runTaskTimer(Main.getInstance(), 0L, 20L);
     }
 
-    private void updateRespawnText(TreeData tree, int timer) {
+    private void updateRespawnText(Tree tree, int timer) {
         TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
         if (textDisplay != null) {
             textDisplay.text(Component.text("§c§l[" + (tree.getRespawnTime() - timer) + " sec]§r§8\n"
@@ -321,7 +321,7 @@ public class TreeChopperManager {
     }
 
     private void updateTextDisplay(UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
 
         TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
@@ -331,7 +331,7 @@ public class TreeChopperManager {
     }
 
     private void resetHealthDisplay(UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
         World world = tree.getWorld();
         if (healthDisplay.containsKey(entityId)) {
@@ -343,7 +343,7 @@ public class TreeChopperManager {
     }
 
     private void updateHealthDisplay(Player player, UUID entityId, int hits) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
         World world = tree.getWorld();
         if (!healthDisplay.containsKey(entityId)) return;
@@ -355,7 +355,7 @@ public class TreeChopperManager {
     }
 
     private void createHealthDisplay(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
         Location displayLocation = tree.getLocation().clone().add(0, -0.5, 0.5);
         displayLocation.setYaw(180f);
@@ -378,7 +378,7 @@ public class TreeChopperManager {
     }
 
     private void resetTextDisplay(UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
 
         TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
@@ -388,7 +388,7 @@ public class TreeChopperManager {
     }
 
     private boolean canHarvestTree(Player player, UUID entityId) {
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (tree == null) return true;
         if (tree.getHarvester() != null && !player.equals(tree.getHarvester())) {
             player.sendMessage("§cSomeone else is harvesting this tree!");

@@ -5,7 +5,7 @@ import com.ticxo.modelengine.api.events.BaseEntityInteractEvent;
 import lt.tomexas.mystcore.resources.ResourcesMain;
 import lt.tomexas.mystcore.resources.data.trees.Axe;
 import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.TreeData;
+import lt.tomexas.mystcore.resources.data.trees.Tree;
 import lt.tomexas.mystcore.resources.managers.TreeChopperManager;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.Sound;
@@ -26,7 +26,7 @@ public class BaseEntityInteractListener implements Listener {
     public void onEntityInteract(BaseEntityInteractEvent event) {
         Player player = event.getPlayer();
         UUID entityId = event.getBaseEntity().getUUID();
-        TreeData tree = TreeData.getTree(entityId);
+        Tree tree = Tree.getTree(entityId);
         if (!event.getAction().equals(BaseEntityInteractEvent.Action.ATTACK)) return;
         if (tree == null) return;
         if (!hasRequiredAxe(tree, player)) return;
@@ -36,7 +36,7 @@ public class BaseEntityInteractListener implements Listener {
         treeChopperManager.startChopping(player, entityId);
     }
 
-    private boolean hasRequiredAxe(TreeData tree, Player player) {
+    private boolean hasRequiredAxe(Tree tree, Player player) {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         List<Axe> axes = tree.getAxes();
         if (axes.isEmpty()) return false;
@@ -53,7 +53,7 @@ public class BaseEntityInteractListener implements Listener {
         return true;
     }
 
-    private boolean hasRequiredLevel(TreeData tree, Player player) {
+    private boolean hasRequiredLevel(Tree tree, Player player) {
         PlayerData playerData = PlayerData.get(player.getUniqueId());
         Skill skill = tree.getSkillData().stream()
                 .min(Comparator.comparingInt(Skill::level))
@@ -72,7 +72,7 @@ public class BaseEntityInteractListener implements Listener {
         return true;
     }
 
-    private boolean hasRequiredStamina(TreeData tree, Player player) {
+    private boolean hasRequiredStamina(Tree tree, Player player) {
         PlayerData playerData = PlayerData.get(player.getUniqueId());
         Skill skill = tree.getSkillData().stream()
                 .max(Comparator.comparingInt(Skill::level))

@@ -1,12 +1,11 @@
 package lt.tomexas.mystcore.resources.managers;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
-import com.ticxo.modelengine.api.entity.BaseEntity;
 import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.resources.ResourcesMain;
-import lt.tomexas.mystcore.resources.data.trees.TreeData;
+import lt.tomexas.mystcore.resources.data.trees.Tree;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -58,15 +57,14 @@ public final class CommandManager {
         player.sendMessage("§aGiven tree spawner item!");
     }
 
-    public static void handleRemoveTree(Player player, UUID uuid) {
-        BaseEntity<?> entity = ModelEngineAPI.getModeledEntity(uuid).getBase();
-        if (TreeData.hasTree(uuid)) {
-            TreeData.removeTree(uuid);
+    public static void handleRemoveTree(Player player, Block block) {
+        Tree tree = Tree.getByBlock(block);
+        if (tree != null) {
+            UUID uuid = tree.getUuid();
+            Tree.removeTree(uuid);
             player.sendMessage("§aTree removed successfully!");
-        } else if ((entity instanceof Dummy<?> dummy)) {
-            ModelEngineAPI.getModeledEntity(dummy.getUUID()).markRemoved();
         } else {
-            player.sendMessage("§cTree with this UUID does not exist!");
+            player.sendMessage("§cNo tree found at the targeted location!");
         }
     }
 
@@ -76,7 +74,7 @@ public final class CommandManager {
      * @param player the player executing the command
      * @param uuid   the UUID of the tree entity
      */
-    public static void handleSetRespawnTime(Player player, UUID uuid, String time) {
+    public static void handleSetRespawnTime(Player player, Block block, String time) {
 
         int respawnTime = parseInteger(time, "respawn time", player);
         if (respawnTime == -1) {
@@ -84,12 +82,14 @@ public final class CommandManager {
             return;
         }
 
-        if (TreeData.hasTree(uuid)) {
-            TreeData tree = TreeData.getTree(uuid);
-            if (tree == null) {
-                player.sendMessage("§cThe targeted tree is not valid or does not exist!");
-                return;
-            }
+        Tree tree = Tree.getByBlock(block);
+        if (tree == null) {
+            player.sendMessage("§cNo tree found at the targeted location!");
+            return;
+        }
+        UUID uuid = tree.getUuid();
+
+        if (Tree.hasTree(uuid)) {
             tree.setRespawnTime(respawnTime);
             player.sendMessage("§aRespawn time set successfully to " + respawnTime + " seconds!");
         } else {

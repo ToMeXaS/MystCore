@@ -4,7 +4,6 @@ import co.aikar.commands.PaperCommandManager;
 import com.bgsoftware.superiorskyblock.api.SuperiorSkyblockAPI;
 import com.bgsoftware.superiorskyblock.api.island.Island;
 import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
-import com.sun.source.tree.Tree;
 import lt.tomexas.mystcore.listeners.BlockBreakListener;
 import lt.tomexas.mystcore.listeners.EntityDamageByEntityListener;
 import lt.tomexas.mystcore.listeners.PlayerJoinListener;
@@ -15,11 +14,10 @@ import lt.tomexas.mystcore.resources.listeners.BaseEntityInteractListener;
 import lt.tomexas.mystcore.resources.ResourcesDatabase;
 import lt.tomexas.mystcore.resources.listeners.PlayerInteractListener;
 import lt.tomexas.mystcore.resources.commands.MystResourcesCommand;
-import lt.tomexas.mystcore.resources.data.trees.TreeData;
+import lt.tomexas.mystcore.resources.data.trees.Tree;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
@@ -78,7 +76,7 @@ public final class Main extends JavaPlugin {
             }
 
             if (resourcesDatabase != null) {
-                resourcesDatabase.addOrUpdateTrees(TreeData.getAllTrees().keySet());
+                resourcesDatabase.addOrUpdateTrees(Tree.getAllTrees().keySet());
                 resourcesDatabase.closeConnection();
             }
         } catch (SQLException e) {

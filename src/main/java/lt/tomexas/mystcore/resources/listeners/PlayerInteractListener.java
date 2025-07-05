@@ -4,14 +4,12 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
-import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.resources.data.trees.Axe;
 import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.TreeData;
+import lt.tomexas.mystcore.resources.data.trees.Tree;
 import lt.tomexas.mystcore.resources.utils.PersistentDataUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.event.EventHandler;
@@ -62,7 +60,7 @@ public class PlayerInteractListener implements Listener {
 
         List<Block> barrierBlocks = spawnBarrierBlocks(clickedBlockLocation);
 
-        new TreeData(uuid,
+        new Tree(uuid,
                 textEntityId,
                 location,
                 barrierBlocks,

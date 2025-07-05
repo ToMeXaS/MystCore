@@ -9,7 +9,7 @@ import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.resources.data.trees.Axe;
 import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.TreeData;
+import lt.tomexas.mystcore.resources.data.trees.Tree;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -86,7 +86,7 @@ public class ResourcesDatabase {
             connection.setAutoCommit(false); // Start transaction
 
             for (UUID uuid : uuids) {
-                TreeData tree = TreeData.getTree(uuid);
+                Tree tree = Tree.getTree(uuid);
                 if (tree == null) {
                     logger.warning("Tree with UUID " + uuid + " not found. Skipping.");
                     continue;
@@ -195,7 +195,7 @@ public class ResourcesDatabase {
                         healthEntity.remove();
                 }
 
-                new TreeData(uuid,
+                new Tree(uuid,
                         textEntityId,
                         location,
                         barrierBlocks,

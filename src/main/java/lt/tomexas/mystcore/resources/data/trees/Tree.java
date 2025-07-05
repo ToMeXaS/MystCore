@@ -23,11 +23,11 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 @Getter
-public class TreeData {
+public class Tree {
 
     private static final Main plugin = Main.getInstance();
     private static final Logger logger = plugin.getLogger();
-    private static final Map<UUID, TreeData> REGISTRY = new HashMap<>();
+    private static final Map<UUID, Tree> REGISTRY = new HashMap<>();
 
     // Tree properties
     private final UUID uuid;
@@ -54,17 +54,17 @@ public class TreeData {
     private final List<Axe> axes;
     private final List<ItemStack> drops;
 
-    public TreeData(@NotNull UUID uuid,
-                    UUID textEntityId,
-                    Location location,
-                    List<Block> barrierBlocks,
-                    String modelId,
-                    int respawnTime,
-                    int glowChance,
-                    String skillType,
-                    List<Skill> skillData,
-                    List<Axe> axes,
-                    List<ItemStack> drops) {
+    public Tree(@NotNull UUID uuid,
+                UUID textEntityId,
+                Location location,
+                List<Block> barrierBlocks,
+                String modelId,
+                int respawnTime,
+                int glowChance,
+                String skillType,
+                List<Skill> skillData,
+                List<Axe> axes,
+                List<ItemStack> drops) {
         this.uuid = uuid;
         this.textEntityId = textEntityId;
 
@@ -84,7 +84,7 @@ public class TreeData {
         REGISTRY.put(uuid, this);
     }
 
-    public static TreeData getTree(UUID uuid) {
+    public static Tree getTree(UUID uuid) {
         if (!hasTree(uuid)) {
             logger.warning("Tree with UUID " + uuid + " is not registered in Tree registry.");
             return null;
@@ -92,7 +92,7 @@ public class TreeData {
         return REGISTRY.get(uuid);
     }
 
-    public static Map<UUID, TreeData> getAllTrees() {
+    public static Map<UUID, Tree> getAllTrees() {
         return REGISTRY;
     }
 
@@ -100,8 +100,21 @@ public class TreeData {
         return REGISTRY.containsKey(uuid);
     }
 
+    public static Tree getByBlock(Block block) {
+        if (block == null || !block.getType().equals(Material.BARRIER)) {
+            logger.warning("Block is null or not a barrier block.");
+            return null;
+        }
+        for (Tree tree : REGISTRY.values()) {
+            if (tree.getBarrierBlocks().contains(block)) {
+                return tree;
+            }
+        }
+        return null;
+    }
+
     public static void removeTree(UUID uuid) {
-        TreeData tree = REGISTRY.remove(uuid);
+        Tree tree = REGISTRY.remove(uuid);
         if (tree == null) {
             logger.warning("Tree with UUID " + uuid + " is not registered in Tree registry.");
             return;
