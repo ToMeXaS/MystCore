@@ -91,6 +91,10 @@ public final class CommandManager {
         Entity targetEntity = player.getTargetEntity(10);
         if (targetEntity != null && TreeData.hasTree(targetEntity.getUniqueId())) {
             TreeData tree = TreeData.getTree(targetEntity.getUniqueId());
+            if (tree == null) {
+                player.sendMessage("§cThe targeted tree is not valid or does not exist!");
+                return;
+            }
             tree.setRespawnTime(respawnTime);
             player.sendMessage("§aRespawn time set successfully to " + respawnTime + " seconds!");
         } else {
