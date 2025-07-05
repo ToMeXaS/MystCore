@@ -152,7 +152,7 @@ jobs:
                 fields: [
                   { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                   { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                  { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                  { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true }
                 ],
                 footer: {
                   text: "Failed Job via GitHub Actions"
