@@ -18,7 +18,7 @@ public class MystResourcesCommand extends BaseCommand {
 
     @Subcommand("gettreespawner")
     public void onGetTreeSpawner(Player player, String treeId) {
-        CommandManager.handleGetTreeSpawner(player, new String[] {treeId});
+        CommandManager.handleGetTreeSpawner(player, treeId);
     }
 
     @Subcommand("removetree")

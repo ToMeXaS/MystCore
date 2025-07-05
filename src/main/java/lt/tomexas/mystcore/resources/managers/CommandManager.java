@@ -41,13 +41,10 @@ public final class CommandManager {
      * @param player the player executing the command
      * @param args   the command arguments
      */
-    public static void handleGetTreeSpawner(Player player, String[] args) {
-        if (!validateArgsLength(player, args, 2, "Usage: /mr gettreespawner <id>")) return;
-
-        String id = args[1];
-        FileConfiguration config = resourcesMain.getFileConfigurations().get(id);
+    public static void handleGetTreeSpawner(Player player, String treeId) {
+        FileConfiguration config = resourcesMain.getFileConfigurations().get(treeId);
         if (config == null) {
-            player.sendMessage("§cNo configuration found for the given ID: " + id);
+            player.sendMessage("§cNo configuration found for the given ID: " + treeId + "!");
             return;
         }
 
