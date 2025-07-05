@@ -1,0 +1,13 @@
+name: MystCore
+version: 0.1.5
+main: lt.tomexas.mystcore.Main
+api-version: '1.21'
+commands:
+    myst-resources:
+      aliases: [myst-res, mr]
+      description: Main command for MystCore
+      permission: mystcore.admin
+      permission-message: You do not have permission to use this command.
+depend:
+  - 'PlaceholderAPI'
+  - 'ModelEngine'

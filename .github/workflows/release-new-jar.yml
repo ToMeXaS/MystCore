@@ -1,0 +1,280 @@
+name: Release and Upload Jar
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch full history
+
+      - name: Record start time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Get last commit message
+        id: commit
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          echo "msg=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: Cancel Job
+        if: |
+          !contains(steps.commit.outputs.msg, '#patch') &&
+          !contains(steps.commit.outputs.msg, '#minor') &&
+          !contains(steps.commit.outputs.msg, '#major')
+        run: |
+          echo "🛑 No version flag found, cancelling..."
+          exit 1
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set execute permission for Gradle wrapper
+        run: chmod +x ./gradlew
+
+      - name: Build with Gradle (Patch)
+        if: contains(steps.commit.outputs.msg, '#patch')
+        run: |
+          ./gradlew releasePatchJar
+          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+          echo "git_hash=$git_hash" >> $GITHUB_ENV
+
+      - name: Build with Gradle (Minor)
+        if: contains(steps.commit.outputs.msg, '#minor')
+        run: |
+          ./gradlew releaseMinorJar
+          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+          echo "git_hash=$git_hash" >> $GITHUB_ENV
+
+      - name: Build with Gradle (Major)
+        if: contains(steps.commit.outputs.msg, '#major')
+        run: |
+          ./gradlew releaseMajorJar
+          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+          echo "git_hash=$git_hash" >> $GITHUB_ENV
+
+      - name: Send Discord Webhook on Failure
+        if: |
+          (contains(steps.commit.outputs.msg, '#patch') ||
+           contains(steps.commit.outputs.msg, '#minor') ||
+           contains(steps.commit.outputs.msg, '#major')) && failure()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GIT_HASH: ${{ env.git_hash }}
+          AUTHOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          GIT_HASH=$(git rev-parse --short $GITHUB_SHA || echo "unknown")
+          COMMIT_MESSAGE="$(git log -1 --pretty=%B || echo "No commit message")"
+          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
+          REPO_URL="https://github.com/$REPO"
+          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          json=$(jq -n \
+            --arg title "❌ Build Failed" \
+            --arg repo "$REPO" \
+            --arg repo_url "$REPO_URL" \
+            --arg branch "$BRANCH" \
+            --arg branch_url "$BRANCH_URL" \
+            --arg commit "$GIT_HASH" \
+            --arg commit_url "$COMMIT_URL" \
+            --arg commit_message "$COMMIT_MESSAGE" \
+            --arg author "$AUTHOR" \
+            --arg timestamp "$TIMESTAMP" \
+            '{
+              embeds: [
+                {
+                  title: $title,
+                  color: 15158332,
+                  timestamp: $timestamp,
+                  author: {
+                    name: $author,
+                    url: ("https://github.com/" + $author),
+                    icon_url: ("https://github.com/" + $author + ".png")
+                  },
+                  fields: [
+                    { name: "Repository", value: ("["+ $repo +"]("+ $repo_url +")"), inline: true },
+                    { name: "Branch", value: ("["+ $branch +"]("+ $branch_url +")"), inline: true },
+                    { name: "Commit", value: ("[" + $commit + "](" + $commit_url + ")"), inline: true },
+                    { name: "Message", value: ("```"+ $commit_message +"```"), inline: false }
+                  ],
+                  footer: {
+                    text: "Failed Job via GitHub Actions"
+                  }
+                }
+              ]
+            }')
+
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$json" \
+               "$DISCORD_WEBHOOK_URL"
+
+      - name: Read version from gradle.properties
+        id: get_version
+        run: |
+          version=$(grep "^version=" gradle.properties | cut -d '=' -f2)
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Get Jar file name
+        id: get_jar_name
+        run: |
+          jar_name=$(ls artifacts/*.jar | head -n 1 | xargs -n 1 basename)
+          echo "JAR_NAME=$jar_name" >> $GITHUB_ENV
+
+      - name: Upload JAR to SFTP
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
+        with:
+          host: ${{ secrets.SFTP_HOST }}
+          username: ${{ secrets.SFTP_USER }}
+          password: ${{ secrets.SFTP_PASS }}
+          port: 22
+          source: "artifacts/${{ env.JAR_NAME }}"
+          target: "/plugins"
+
+      # - name: Create a Release and Upload artifacts
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     gh release create ${{ env.git_hash }} \
+      #       --title "Release ${{ env.VERSION }}" \
+      #       --notes "$(git log -1 --pretty=%B || echo "No commit message")" \
+      #       --prerelease=false \
+      #       --draft=false
+      #
+      #     gh release upload ${{ env.git_hash }} \
+      #       artifacts/{{ env.JAR_NAME }} \
+
+      - name: Send Discord Webhook
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          VERSION: ${{ env.VERSION }}
+          GIT_HASH: ${{ env.git_hash }}
+          AUTHOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          START_TIME=${START_TIME:-$(date +%s)}
+          GIT_HASH=$(git rev-parse --short $GITHUB_SHA || echo "unknown")
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          COMMIT_MESSAGE="$(git log -1 --pretty=format:%s)"
+          RELEASE_URL="https://github.com/$REPO/releases/tag/$GIT_HASH"
+          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
+          REPO_URL="https://github.com/$REPO"
+          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          JAR_NAME={{ env.JAR_NAME }}
+          JAR_URL="https://github.com/$REPO/releases/download/$GIT_HASH/$JAR_NAME"
+          ARTIFACT_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          json=$(jq -n \
+            --arg title "🛠️ New Release" \
+            --arg repo "$REPO" \
+            --arg repo_url "$REPO_URL" \
+            --arg version "$VERSION" \
+            --arg branch "$BRANCH" \
+            --arg branch_url "$BRANCH_URL" \
+            --arg commit "$GIT_HASH" \
+            --arg commit_url "$COMMIT_URL" \
+            --arg commit_message "$COMMIT_MESSAGE" \
+            --arg author "$AUTHOR" \
+            --arg release_url "$RELEASE_URL" \
+            --arg jar_name "$JAR_NAME" \
+            --arg jar_url "$JAR_URL" \
+            --arg artifact_size "$ARTIFACT_SIZE" \
+            --arg duration "$DURATION" \
+            --arg timestamp "$TIMESTAMP" \
+            '{
+              embeds: [
+                {
+                  title: $title,
+                  url: $release_url,
+                  color: 3066993,
+                  timestamp: $timestamp,
+                  author: {
+                    name: $author,
+                    url: ("https://github.com/" + $author),
+                    icon_url: ("https://github.com/" + $author + ".png")
+                  },
+                  fields: [
+                    { name: "Repository", value: ("["+ $repo +"]("+ $repo_url +")"), inline: true },
+                    { name: "Branch", value: ("["+ $branch +"]("+ $branch_url +")"), inline: true },
+                    { name: "Commit", value: ("[" + $commit + "](" + $commit_url + ")"), inline: true },
+                    { name: "Version", value: ("`"+ $version +"`"), inline: true },
+                    {
+                      name: "Build Duration",
+                      value: (
+                        "`" +
+                        (($duration | tonumber) as $total_seconds |
+                        if $total_seconds < 60 then
+                        (($total_seconds | . * 100 | floor / 100) | tostring + " seconds")
+                        elif $total_seconds < 3600 then
+                        (($total_seconds / 60 | . * 100 | floor / 100) | tostring + " minutes")
+                        else
+                        (($total_seconds / 3600 | . * 100 | floor / 100) | tostring + " hours")
+                        end
+                        ) +
+                        "`"
+                      ),
+                      inline: true
+                    },
+                    {
+                      name: "Artifact Size",
+                      value: ($artifact_size | tonumber as $size |
+                        if $size < 1024 then
+                        ("`" + ($size | tostring) + " bytes`")
+                        elif $size < 1024 * 1024 then
+                        ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
+                        else
+                        ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
+                        end),
+                      inline: true
+                    },
+                    { name: "Message", value: ("```"+ $commit_message +"```"), inline: false },
+                    { name: "Download Jar", value: ("[⬇️ " + $jar_name + "](" + $jar_url + ")"), inline: false }
+                  ],
+                  footer: {
+                    text: "Released via GitHub Actions"
+                  }
+                }
+              ]
+            }')
+
+          curl -H "Content-Type: application/json" \
+               -X POST \
+               -d "$json" \
+               "$DISCORD_WEBHOOK_URL"
+
+      - name: Update gradle.properties
+        run: |
+          # Update the version in gradle.properties
+          sed -i 's/^version=.*/version=${{ env.VERSION }}/' gradle.properties
+          
+          # Configure Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Commit and push changes
+          git add gradle.properties
+          git commit -m "Update version in gradle.properties"
+          git push origin ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
