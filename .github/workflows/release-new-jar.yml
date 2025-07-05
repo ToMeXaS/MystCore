@@ -38,6 +38,10 @@ jobs:
           jar_name=$(ls artifacts/*.jar | head -n 1 | xargs -n 1 basename)
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
+      - name: Get Git SHA
+        id: git-info
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Upload JAR to SFTP
         uses: wlixcc/SFTP-Deploy-Action@v1.2.6
         with:
