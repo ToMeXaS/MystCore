@@ -35,17 +35,16 @@ jobs:
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
-          mapfile -t CHANGED_FILES < <(git diff-tree --no-commit-id --name-only -r "$GIT_HASH" | head -n 20)
           if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
-          CHANGED_FILES_LIST="No files changed."
+            CHANGED_FILES_LIST="No files changed."
           else
-          CHANGED_FILES_LIST=$(for f in "${CHANGED_FILES[@]}"; do
-          fname=$(basename "$f")
-          url="https://github.com/$REPO/blob/$GIT_HASH/$f"
-          printf -- "- [%s](%s)\n" "$fname" "$url"
-          done)
+            CHANGED_FILES_LIST=$(for f in "${CHANGED_FILES[@]}"; do
+              fname=$(basename "$f")
+              url="https://github.com/$REPO/blob/$GIT_HASH/$f"
+              printf -- "- [%s](%s)\n" "$fname" "$url"
+            done)
+          fi
           
-          # Truncate if too long for Discord embed field
           MAX_LENGTH=900
           if [ ${#CHANGED_FILES_LIST} -gt $MAX_LENGTH ]; then
           CHANGED_FILES_LIST="${CHANGED_FILES_LIST:0:$MAX_LENGTH}\n...and more files not shown."
@@ -99,7 +98,7 @@ jobs:
       - run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build || tee build/reports/build.log
 
       - name: Get Jar file name
         id: get_jar
@@ -225,16 +224,20 @@ jobs:
           }')
           curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
 
-      - name: Upload JAR to SFTP
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.6
-        with:
-          username: ${{ secrets.SFTP_USER }}
-          server: ${{ secrets.SFTP_HOST }}
-          password: ${{ secrets.SFTP_PASS }}
-          port: ${{ secrets.SFTP_PORT }}
-          local_path: "artifacts/${{ steps.get_jar.outputs.jar_name }}"
-          remote_path: "/plugins"
-          sftp_only: true
+      - name: Upload JAR to SFTP (with log)
+        run: |
+          sudo apt-get update && sudo apt-get install -y sshpass
+          set -o pipefail
+          sshpass -p "$SFTP_PASS" sftp -v -P $SFTP_PORT $SFTP_USER@$SFTP_HOST <<EOF
+          put artifacts/${{ steps.get_jar.outputs.jar_name }} /plugins
+          bye
+          EOF
+          2>&1 | tee upload.log
+        env:
+          SFTP_USER: ${{ secrets.SFTP_USER }}
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+          SFTP_PASS: ${{ secrets.SFTP_PASS }}
 
       - name: Send Discord Webhook on Upload Failure
         if: failure()
@@ -250,7 +253,7 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          BUILD_LOG=$(tail -n 20 build/reports/build.log 2>/dev/null || echo "No build log found.")
+          UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
           json=$(jq -n \
           --arg title "❌ Upload Failed" \
           --arg author "$AUTHOR" \
@@ -274,7 +277,7 @@ jobs:
                 { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: "Error Log", value: "```\($build_log)```", inline: false },
+                { name: "Error Log", value: "```\($upload_log)```", inline: false },
                 { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
               ],
               footer: { text: "Upload failed via GitHub Actions" }
