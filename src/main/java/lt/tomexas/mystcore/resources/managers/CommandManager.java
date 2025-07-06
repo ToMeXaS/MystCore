@@ -6,6 +6,7 @@ import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.RayTraceResult;
 
 import java.util.UUID;
 
@@ -55,8 +56,14 @@ public final class CommandManager {
         player.sendMessage("§aGiven tree spawner item!");
     }
 
-    public static void handleRemoveTree(Player player, Block block) {
-        Tree tree = Tree.getByBlock(block);
+    /**
+     * Handles the "removetree" command.
+     *
+     * @param player the player executing the command
+     * @param result the ray trace result from the player's view
+     */
+    public static void handleRemoveTree(Player player, RayTraceResult result) {
+        Tree tree = Tree.getByRayTraceResult(result);
         if (tree != null) {
             UUID uuid = tree.getUuid();
             Tree.removeTree(uuid);

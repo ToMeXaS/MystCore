@@ -1,5 +1,7 @@
 package lt.tomexas.mystcore;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,8 +13,13 @@ public class MystPlayer {
     private static final Map<UUID, MystPlayer> REGISTRY = new HashMap<>();
 
     private final OfflinePlayer player;
+    @Getter
     private final String playerFontImage;
+    @Setter
+    @Getter
     private List<OfflinePlayer> islandMembers;
+    @Setter
+    @Getter
     private boolean jumping;
 
     public MystPlayer(@NotNull OfflinePlayer player, @NotNull String playerFontImage, @Nullable List<OfflinePlayer> islandMembers) {
@@ -37,27 +44,8 @@ public class MystPlayer {
         return player.getUniqueId();
     }
 
-    public boolean isJumping() {
-        return jumping;
-    }
-
-    public void setJumping(boolean jumping) {
-        this.jumping = jumping;
-    }
-
     public OfflinePlayer getSpigotPlayer() {
         return player;
     }
 
-    public List<OfflinePlayer> getIslandMembers() {
-        return islandMembers;
-    }
-
-    public void setIslandMembers(List<OfflinePlayer> islandMembers) {
-        this.islandMembers = islandMembers;
-    }
-
-    public String getPlayerFontImage() {
-        return playerFontImage;
-    }
 }

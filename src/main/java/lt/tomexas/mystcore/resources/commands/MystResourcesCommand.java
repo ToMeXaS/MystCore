@@ -8,8 +8,9 @@ import co.aikar.commands.annotation.Subcommand;
 import lt.tomexas.mystcore.resources.managers.CommandManager;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
+import org.bukkit.util.RayTraceResult;
 
-@CommandAlias("mr|myst-resources")
+@CommandAlias("mr|myst-resources|myst-res")
 public class MystResourcesCommand extends BaseCommand {
 
     @Default
@@ -26,8 +27,8 @@ public class MystResourcesCommand extends BaseCommand {
 
     @Subcommand("removetree")
     public void onRemoveTree(Player player) {
-        Block block = player.getTargetBlock(null, 10);
-        CommandManager.handleRemoveTree(player, block);
+        RayTraceResult result = player.rayTraceBlocks(3.0f);
+        CommandManager.handleRemoveTree(player, result);
     }
 
     @Subcommand("setrespawntime")

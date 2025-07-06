@@ -4,6 +4,7 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import lombok.Getter;
 import lombok.Setter;
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.PluginLogger;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -14,19 +15,18 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.RayTraceResult;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Getter
 public class Tree {
 
     private static final Main plugin = Main.getInstance();
-    private static final Logger logger = plugin.getLogger();
     private static final Map<UUID, Tree> REGISTRY = new HashMap<>();
 
     // Tree properties
@@ -86,7 +86,7 @@ public class Tree {
 
     public static Tree getTree(UUID uuid) {
         if (!hasTree(uuid)) {
-            logger.warning("Tree with UUID " + uuid + " is not registered in Tree registry.");
+            PluginLogger.debug("Tree with UUID " + uuid + " is not registered in Tree registry.");
             return null;
         }
         return REGISTRY.get(uuid);
@@ -102,7 +102,7 @@ public class Tree {
 
     public static Tree getByBlock(Block block) {
         if (block == null || !block.getType().equals(Material.BARRIER)) {
-            logger.warning("Block is null or not a barrier block.");
+            PluginLogger.debug("Block is null or not a barrier block.");
             return null;
         }
         for (Tree tree : REGISTRY.values()) {
@@ -113,10 +113,19 @@ public class Tree {
         return null;
     }
 
+    public static Tree getByRayTraceResult(RayTraceResult result) {
+        if (result == null || result.getHitBlock() == null) {
+            PluginLogger.debug("RayTraceResult is null or does not hit a block.");
+            return null;
+        }
+        Block block = result.getHitBlock();
+        return getByBlock(block);
+    }
+
     public static void removeTree(UUID uuid) {
         Tree tree = REGISTRY.remove(uuid);
         if (tree == null) {
-            logger.warning("Tree with UUID " + uuid + " is not registered in Tree registry.");
+            PluginLogger.debug("Tree with UUID " + uuid + " is not registered in Tree registry.");
             return;
         }
 

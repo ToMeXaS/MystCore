@@ -5,6 +5,7 @@ import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
 import com.ticxo.modelengine.api.entity.BaseEntity;
 import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.resources.data.trees.Axe;
 import lt.tomexas.mystcore.resources.data.trees.Skill;
 import lt.tomexas.mystcore.resources.data.trees.Tree;
@@ -21,40 +22,38 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 public class TreeChopperManager {
     private final Main plugin = Main.getInstance();
-    private final Logger logger = plugin.getLogger();
+
     private static final int INACTIVITY_TIMEOUT = 30; // seconds
     private BukkitTask choppingTask;
+
+    // Maps to track player interactions with trees
     private final Map<UUID, Integer> hitCounts = new HashMap<>();
     private final Map<UUID, BukkitRunnable> inactivityTimers = new HashMap<>();
     private final Map<UUID, UUID> playerHarvestingTree = new HashMap<>();
     private final Map<UUID, Boolean> glowingTrees = new HashMap<>();
-    private final Map<UUID, BukkitTask> playerTimers = new HashMap<>();
     private final Map<UUID, UUID> healthDisplay = new HashMap<>();
 
     public void startChopping(Player player, UUID entityId) {
         Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
-        if (player == null || entityId == null) {
-            logger.warning("Invalid player or entityId provided.");
-            return;
-        }
-        if (isChoppedDown(player, entityId)) return;
-        if (!canHarvestTree(player, entityId)) return;
-        if (isAlreadyHarvestingDifferentTree(player, entityId)) return;
+        if (player == null || entityId == null) return;
+
+        if (isChoppedDown(player, tree)) return; // Check if the tree is already chopped down
+        if (!canHarvestTree(player, tree)) return; // Check if the player can harvest the tree
+        if (isAlreadyHarvestingDifferentTree(player, tree)) return; // Check if the player is already harvesting a different tree
         if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) {
-            handleCriticalHit(player, entityId);
+            handleCriticalHit(player, tree);
             return;
-        }
-        if (isAlreadyHarvestingTree(player)) return;
+        } // If the tree was glowing, remove the glow and handle critical hit
+        if (isAlreadyHarvestingTree(player)) return; // Check if the player is already harvesting this tree
 
         playerHarvestingTree.put(player.getUniqueId(), entityId);
         tree.setHarvester(player);
-        updateTextDisplay(entityId);
 
+        updateTextDisplay(entityId);
         createHealthDisplay(player, entityId);
 
         handleTask();
@@ -63,7 +62,7 @@ public class TreeChopperManager {
     }
 
     private void handleTask() {
-        if (choppingTask != null && !choppingTask.isCancelled()) return;
+        if (this.choppingTask != null && !this.choppingTask.isCancelled()) return;
         this.choppingTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -94,7 +93,7 @@ public class TreeChopperManager {
                     updateHealthDisplay(player, entityId, hits);
                     player.playSound(player.getLocation(), "block.wood.chop3", 1, 1);
                     player.swingMainHand();
-                    plugin.getLogger().info("Running chopping task!");
+                    PluginLogger.debug("Running chopping task!");
                 }
             }
         }.runTaskTimer(plugin, 0, 20L);
@@ -153,11 +152,11 @@ public class TreeChopperManager {
         scheduleTreeRespawn(tree, animation);
     }
 
-    private boolean isAlreadyHarvestingDifferentTree(Player player, UUID entityId) {
+    private boolean isAlreadyHarvestingDifferentTree(Player player, Tree tree) {
         UUID playerId = player.getUniqueId();
         UUID currentTree = playerHarvestingTree.get(playerId);
 
-        if (currentTree != null && !currentTree.equals(entityId)) {
+        if (currentTree != null && !currentTree.equals(tree.getUuid())) {
             player.sendMessage("§cYou are already harvesting a different tree!");
             return true;
         }
@@ -166,16 +165,15 @@ public class TreeChopperManager {
 
     private boolean isAlreadyHarvestingTree(Player player) {
         UUID playerId = player.getUniqueId();
-        if (playerTimers.containsKey(playerId) && playerHarvestingTree.containsKey(playerId)) {
+        if (playerHarvestingTree.containsKey(playerId)) {
             player.sendMessage("§cYou are already harvesting this tree!");
             return true;
         }
         return false;
     }
 
-    private void handleCriticalHit(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
-        if (tree == null) return;
+    private void handleCriticalHit(Player player, Tree tree) {
+        UUID entityId = tree.getUuid();
         player.sendMessage("§c§l*CRITICAL HIT*");
         Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
         if (skill == null) return;
@@ -189,9 +187,7 @@ public class TreeChopperManager {
         setTreeGlow(entityId, false);
     }
 
-    private boolean isChoppedDown(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
-        if (tree == null) return false;
+    private boolean isChoppedDown(Player player, Tree tree) {
         if (tree.isChopped()) {
             player.sendMessage("§cTree already chopped down!");
             return true;
@@ -202,8 +198,6 @@ public class TreeChopperManager {
     private boolean isPlayerOnline(Player player, UUID entityId) {
         Tree tree = Tree.getTree(entityId);
         if (!player.isOnline() && tree != null) {
-            playerTimers.get(player.getUniqueId()).cancel();
-            playerTimers.remove(player.getUniqueId());
             hitCounts.remove(entityId);
             playerHarvestingTree.remove(player.getUniqueId());
             cancelInactivityTimer(entityId);
@@ -216,16 +210,11 @@ public class TreeChopperManager {
     }
 
     private boolean isPlayerTargetingTree(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
-        if (tree == null) return false;
-        RayTraceResult rayTrace = player.rayTraceBlocks(3.0);
-        if (rayTrace == null || !tree.getBarrierBlocks().contains(rayTrace.getHitBlock())) {
-            player.sendMessage("§cYou stopped chopping the tree!");
-            playerHarvestingTree.remove(player.getUniqueId());
-            return false;
-        }
-
-        return true;
+        RayTraceResult result = player.rayTraceBlocks(3.0);
+        Tree tree = Tree.getByRayTraceResult(result);
+        //player.sendMessage("§cYou stopped harvesting the tree!");
+        //playerHarvestingTree.remove(player.getUniqueId());
+        return tree != null && tree.getUuid().equals(entityId);
     }
 
     private boolean isTreeGlowing(UUID entityId) {
@@ -319,6 +308,11 @@ public class TreeChopperManager {
         }
     }
 
+    /**
+     * Updates the text display for the tree entity.
+     *
+     * @param entityId the UUID of the tree entity
+     */
     private void updateTextDisplay(UUID entityId) {
         Tree tree = Tree.getTree(entityId);
         if (tree == null) return;
@@ -386,9 +380,7 @@ public class TreeChopperManager {
         }
     }
 
-    private boolean canHarvestTree(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
-        if (tree == null) return true;
+    private boolean canHarvestTree(Player player, Tree tree) {
         if (tree.getHarvester() != null && !player.equals(tree.getHarvester())) {
             player.sendMessage("§cSomeone else is harvesting this tree!");
             return false;

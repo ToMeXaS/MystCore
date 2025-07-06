@@ -1,6 +1,9 @@
 package lt.tomexas.mystcore.resources;
 
+import lombok.Getter;
+import lombok.Setter;
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.resources.managers.PlayerManager;
 import lt.tomexas.mystcore.resources.managers.TreeChopperManager;
 import lt.tomexas.mystcore.resources.managers.TreeConfigManager;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -13,11 +16,13 @@ import java.util.Map;
 public class ResourcesMain {
 
     private final Main plugin = Main.getInstance();
+    @Getter
     private static ResourcesMain instance;
     private final String CONFIG_PATH = plugin.getDataFolder().getPath();
+    @Getter
     private final TreeChopperManager treeChopperManager;
+    @Getter
     private final Map<String, FileConfiguration> fileConfigurations = new HashMap<>();
-    private boolean stressTesting = false;
 
     public ResourcesMain() {
         instance = this;
@@ -57,23 +62,4 @@ public class ResourcesMain {
         }
     }
 
-    public static ResourcesMain getInstance() {
-        return instance;
-    }
-
-    public TreeChopperManager getTreeChopperManager() {
-        return treeChopperManager;
-    }
-
-    public Map<String, FileConfiguration> getFileConfigurations() {
-        return fileConfigurations;
-    }
-
-    public boolean isStressTesting() {
-        return stressTesting;
-    }
-
-    public void setStressTesting(boolean stressTesting) {
-        this.stressTesting = stressTesting;
-    }
 }
