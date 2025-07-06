@@ -35,15 +35,16 @@ jobs:
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
-          mapfile -t CHANGED_FILES < <(git diff-tree --no-commit-id --name-only -r "$GIT_HASH" | head -n 20)
-          if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
-          CHANGED_FILES_LIST="No files changed."
-          else
           CHANGED_FILES_LIST=$(for f in "${CHANGED_FILES[@]}"; do
           fname=$(basename "$f")
           url="https://github.com/$REPO/blob/$GIT_HASH/$f"
           printf -- "- [%s](%s)\n" "$fname" "$url"
           done)
+          
+          # Truncate if too long for Discord embed field
+          MAX_LENGTH=900
+          if [ ${#CHANGED_FILES_LIST} -gt $MAX_LENGTH ]; then
+          CHANGED_FILES_LIST="${CHANGED_FILES_LIST:0:$MAX_LENGTH}\n...and more files not shown."
           fi
 
           json=$(jq -n \
