@@ -35,7 +35,6 @@ jobs:
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
           
-          # Get changed files as a Bash array (short paths with URLs)
           mapfile -t CHANGED_FILES < <(git diff-tree --no-commit-id --name-only -r "$GIT_HASH" | head -n 20)
           if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
           CHANGED_FILES_LIST="No files changed."
