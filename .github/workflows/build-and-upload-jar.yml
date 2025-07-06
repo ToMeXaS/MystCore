@@ -34,6 +34,7 @@ jobs:
           COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          CHANGED_FILES=($(git diff --name-only $GITHUB_SHA^ $GITHUB_SHA))
           
           if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
             CHANGED_FILES_LIST="No files changed."
@@ -228,7 +229,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
           set -o pipefail
-          sshpass -p "$SFTP_PASS" sftp -v -P $SFTP_PORT $SFTP_USER@$SFTP_HOST <<EOF
+          sshpass -p "$SFTP_PASS" sftp -o StrictHostKeyChecking=no -v -P $SFTP_PORT $SFTP_USER@$SFTP_HOST <<EOF
           put artifacts/${{ steps.get_jar.outputs.jar_name }} /plugins
           bye
           EOF
@@ -262,7 +263,7 @@ jobs:
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
           --arg run_url "$GITHUB_RUN_URL" \
           --arg timestamp "$TIMESTAMP" \
-          --arg build_log "$BUILD_LOG" \
+          --arg upload_log "$UPLOAD_LOG" \
           '{
             embeds: [{
               title: $title,
