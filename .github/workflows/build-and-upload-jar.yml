@@ -225,11 +225,19 @@ jobs:
           }')
           curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
 
+      - name: Add SFTP host key to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p $SFTP_PORT $SFTP_HOST >> ~/.ssh/known_hosts
+        env:
+          SFTP_HOST: ${{ secrets.SFTP_HOST }}
+          SFTP_PORT: ${{ secrets.SFTP_PORT }}
+
       - name: Upload JAR to SFTP (with log)
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass
           set -o pipefail
-          sshpass -p "$SFTP_PASS" sftp -o StrictHostKeyChecking=no -v -P $SFTP_PORT $SFTP_USER@$SFTP_HOST <<EOF
+          sshpass -p "$SFTP_PASS" sftp -v -P $SFTP_PORT $SFTP_USER@$SFTP_HOST <<EOF
           put artifacts/${{ steps.get_jar.outputs.jar_name }} /plugins
           bye
           EOF
