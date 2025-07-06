@@ -121,6 +121,7 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          BUILD_LOG=$(tail -n 20 build/reports/build.log 2>/dev/null || echo "No build log found.")
           json=$(jq -n \
           --arg title "❌ Build Failed" \
           --arg repo "$REPO" \
@@ -132,6 +133,7 @@ jobs:
           --arg author "$AUTHOR" \
           --arg timestamp "$TIMESTAMP" \
           --arg run_url "$GITHUB_RUN_URL" \
+          --arg build_log "$BUILD_LOG" \
           '{
             embeds: [
               {
@@ -147,6 +149,7 @@ jobs:
                   { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                   { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                   { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                  { name: "Error Log", value: "```\($build_log)```", inline: false },
                   { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
                 ],
                 footer: {
@@ -247,6 +250,7 @@ jobs:
           COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
           REPO_URL="https://github.com/$REPO"
           BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+          BUILD_LOG=$(tail -n 20 build/reports/build.log 2>/dev/null || echo "No build log found.")
           json=$(jq -n \
           --arg title "❌ Upload Failed" \
           --arg author "$AUTHOR" \
@@ -255,6 +259,7 @@ jobs:
           --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
           --arg run_url "$GITHUB_RUN_URL" \
           --arg timestamp "$TIMESTAMP" \
+          --arg build_log "$BUILD_LOG" \
           '{
             embeds: [{
               title: $title,
@@ -269,6 +274,7 @@ jobs:
                 { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
                 { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
                 { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+                { name: "Error Log", value: "```\($build_log)```", inline: false },
                 { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
               ],
               footer: { text: "Upload failed via GitHub Actions" }
