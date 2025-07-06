@@ -3,6 +3,7 @@ package lt.tomexas.mystcore.resources;
 import lombok.Getter;
 import lombok.Setter;
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.resources.managers.PlayerManager;
 import lt.tomexas.mystcore.resources.managers.TreeChopperManager;
 import lt.tomexas.mystcore.resources.managers.TreeConfigManager;
@@ -58,7 +59,7 @@ public class ResourcesMain {
 
         if (!configFile.exists()) {
             plugin.saveResource("trees/oak_tree_1.yml", false);
-            plugin.getLogger().info("Default config created: " + configFile.getPath());
+            PluginLogger.debug("Default config created: " + configFile.getPath());
         }
     }
 

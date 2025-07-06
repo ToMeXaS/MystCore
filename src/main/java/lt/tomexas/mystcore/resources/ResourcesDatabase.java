@@ -7,6 +7,7 @@ import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.resources.data.trees.Axe;
 import lt.tomexas.mystcore.resources.data.trees.Skill;
 import lt.tomexas.mystcore.resources.data.trees.Tree;
@@ -19,13 +20,9 @@ import org.bukkit.inventory.ItemStack;
 
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class ResourcesDatabase {
-
-    private final Main plugin = Main.getInstance();
-    private final Logger logger = plugin.getLogger();
 
     private static final String DB_URL = "jdbc:sqlite:"; // Database URL prefix
     private static final String DB_NAME = "resources.db"; // Database name
@@ -59,7 +56,7 @@ public class ResourcesDatabase {
 
     public void addOrUpdateTrees(Set<UUID> uuids) {
         if (connection == null) {
-            logger.severe("Database connection is null. Cannot add or update trees.");
+            PluginLogger.debug("Database connection is null. Cannot add or update trees.");
             return;
         }
 
@@ -86,9 +83,9 @@ public class ResourcesDatabase {
             connection.setAutoCommit(false); // Start transaction
 
             for (UUID uuid : uuids) {
-                Tree tree = Tree.getTree(uuid);
+                Tree tree = Tree.getTreeByUuid(uuid);
                 if (tree == null) {
-                    logger.warning("Tree with UUID " + uuid + " not found. Skipping.");
+                    PluginLogger.debug("Tree with UUID " + uuid + " not found. Skipping.");
                     continue;
                 }
 
@@ -116,14 +113,14 @@ public class ResourcesDatabase {
             try {
                 connection.rollback(); // Rollback transaction on error
             } catch (SQLException rollbackEx) {
-                logger.severe("Failed to rollback transaction: " + rollbackEx.getMessage());
+                PluginLogger.debug("Failed to rollback transaction: " + rollbackEx.getMessage());
             }
-            Main.getInstance().getLogger().severe("Failed to add or update trees in database: " + e.getMessage());
+            PluginLogger.debug("Failed to add or update trees in database: " + e.getMessage());
         } finally {
             try {
                 connection.setAutoCommit(true); // Reset auto-commit
             } catch (SQLException e) {
-                logger.severe("Failed to reset auto-commit: " + e.getMessage());
+                PluginLogger.debug("Failed to reset auto-commit: " + e.getMessage());
             }
         }
     }
@@ -139,52 +136,52 @@ public class ResourcesDatabase {
                     healthEntityId = UUID.fromString(resultSet.getString("healthEntityId"));
                 Location location = deserializeLocation(resultSet.getString("location"));
                 if (location == null) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid location.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid location.");
                     continue;
                 }
                 List<Block> barrierBlocks = deserializeBlocks(resultSet.getString("barrierBlocks"));
                 if (barrierBlocks.isEmpty()) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid barrier blocks.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid barrier blocks.");
                     continue;
                 }
                 String modelId = resultSet.getString("modelId");
                 if (modelId == null || modelId.isEmpty()) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid model ID.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid model ID.");
                     continue;
                 }
                 int respawnTime = resultSet.getInt("respawnTime");
                 if (respawnTime <= 0) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid respawn time.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid respawn time.");
                     continue;
                 }
                 int glowChance = resultSet.getInt("glowChance");
                 if (glowChance < 0 || glowChance > 100) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid glow chance.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid glow chance.");
                     continue;
                 }
                 String skillType = resultSet.getString("skillType");
                 if (skillType == null || skillType.isEmpty()) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid skill type.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid skill type.");
                     continue;
                 }
                 List<Skill> skillData = deserializeSkillData(resultSet.getString("skillData"));
                 if (skillData.isEmpty()) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid skill data.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid skill data.");
                     continue;
                 }
                 List<Axe> axes = deserializeAxes(resultSet.getString("axes"));
                 if (axes.isEmpty()) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid axes.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid axes.");
                     continue;
                 }
                 List<ItemStack> drops = deserializeItemStackList(resultSet.getString("drops"));
                 if (drops.isEmpty()) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to invalid drops.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid drops.");
                     continue;
                 }
                 BaseEntity<?> entity = ModelEngineAPI.getModeledEntity(uuid).getBase();
                 if (!(entity instanceof Dummy<?> dummy)) {
-                    logger.warning("Skipping tree with UUID " + uuid + " due to missing entity.");
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to missing entity.");
                     continue;
                 }
                 if (dummy.isGlowing()) dummy.setGlowing(false);
@@ -208,7 +205,7 @@ public class ResourcesDatabase {
                         drops);
             }
         } catch (SQLException e) {
-            logger.severe("Failed to retrieve trees from database! " + e.getMessage());
+            PluginLogger.debug("Failed to retrieve trees from database! " + e.getMessage());
         }
     }
 
@@ -230,8 +227,7 @@ public class ResourcesDatabase {
 
     private void stopFallingAnimation(UUID uuid, String modelId) {
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(uuid);
-        if (modeledEntity == null) {
-
+        if (modeledEntity != null) {
             ActiveModel activeModel = modeledEntity.getModel(modelId).orElse(null);
             if (activeModel != null) {
                 AnimationHandler animationHandler = activeModel.getAnimationHandler();
@@ -335,8 +331,7 @@ public class ResourcesDatabase {
                         config.loadFromString(itemString); // Load the YAML string
                         return config.getItemStack("item"); // Retrieve the ItemStack
                     } catch (Exception e) {
-                        Main.getInstance().getLogger().warning("Failed to deserialize item stack: " + itemString);
-                        e.printStackTrace();
+                        PluginLogger.debug("Failed to deserialize item stack: " + itemString);
                         return null;
                     }
                 })

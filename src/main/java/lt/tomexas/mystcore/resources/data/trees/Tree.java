@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Getter
+@Setter
 public class Tree {
 
     private static final Main plugin = Main.getInstance();
@@ -32,21 +33,17 @@ public class Tree {
     // Tree properties
     private final UUID uuid;
     private final UUID textEntityId;
-    @Setter
     private UUID healthEntityId;
 
-    @Setter
     private Player harvester;
     private final World world;
     private final Location location;
     private final List<Block> barrierBlocks;
     private String entityText;
-    @Setter
     private boolean chopped = false;
 
     // Tree configuration
     private final String modelId;
-    @Setter
     private int respawnTime;
     private final int glowChance;
     private final String skillType;
@@ -84,33 +81,34 @@ public class Tree {
         REGISTRY.put(uuid, this);
     }
 
-    public static Tree getTree(UUID uuid) {
-        if (!hasTree(uuid)) {
+    public static Map<UUID, Tree> getAllTrees() {
+        return REGISTRY;
+    }
+
+    public static boolean exists(UUID uuid) {
+        return REGISTRY.containsKey(uuid);
+    }
+
+    public static Tree getTreeByUuid(UUID uuid) {
+        if (!exists(uuid)) {
             PluginLogger.debug("Tree with UUID " + uuid + " is not registered in Tree registry.");
             return null;
         }
         return REGISTRY.get(uuid);
     }
 
-    public static Map<UUID, Tree> getAllTrees() {
-        return REGISTRY;
-    }
-
-    public static boolean hasTree(UUID uuid) {
-        return REGISTRY.containsKey(uuid);
-    }
-
     public static Tree getByBlock(Block block) {
-        if (block == null || !block.getType().equals(Material.BARRIER)) {
-            PluginLogger.debug("Block is null or not a barrier block.");
+        if (block == null || block.getType() != Material.BARRIER) {
+            PluginLogger.debug("Block is null or is not a barrier block.");
             return null;
         }
-        for (Tree tree : REGISTRY.values()) {
-            if (tree.getBarrierBlocks().contains(block)) {
-                return tree;
-            }
-        }
-        return null;
+        return REGISTRY.values().stream()
+                .filter(tree -> tree.getBarrierBlocks().contains(block))
+                .findFirst()
+                .orElseGet(() -> {
+                    PluginLogger.debug("No tree found for the given block.");
+                    return null;
+                });
     }
 
     public static Tree getByRayTraceResult(RayTraceResult result) {
@@ -129,25 +127,19 @@ public class Tree {
             return;
         }
 
-        // Remove the armor stand entity
+        // Remove the text entity if it exists
         World world = tree.getWorld();
         if (world != null) {
             Entity textEntity = world.getEntity(tree.getTextEntityId());
-            if (textEntity != null) {
-                textEntity.remove();
-            }
+            if (textEntity != null) textEntity.remove();
         }
+
         ModelEngineAPI.getModeledEntity(uuid).markRemoved();
 
         // Remove the barrier blocks if they exist
-        List<Block> barrierBlocks = tree.getBarrierBlocks();
-        if (barrierBlocks != null && !barrierBlocks.isEmpty()) {
-            Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
-                for (Block block : barrierBlocks) {
-                    block.setType(Material.AIR);
-                }
-            });
-        }
+        Bukkit.getScheduler().runTask(plugin, () ->
+                tree.getBarrierBlocks().forEach(block -> block.setType(Material.AIR))
+        );
 
         // Remove the tree from the database
         plugin.getResourcesDatabase().removeTree(uuid);

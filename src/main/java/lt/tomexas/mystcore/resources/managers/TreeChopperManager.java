@@ -37,7 +37,7 @@ public class TreeChopperManager {
     private final Map<UUID, UUID> healthDisplay = new HashMap<>();
 
     public void startChopping(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
         if (player == null || entityId == null) return;
 
@@ -80,7 +80,7 @@ public class TreeChopperManager {
                     resetInactivityTimer(player, entityId);
 
                     int hits = hitCounts.getOrDefault(entityId, 0);
-                    Tree tree = Tree.getTree(entityId);
+                    Tree tree = Tree.getTreeByUuid(entityId);
                     if (tree == null) continue;
                     Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
                     Axe axe = getPlayerAxe(player, tree.getAxes());
@@ -89,7 +89,7 @@ public class TreeChopperManager {
 
                     if (hits >= skill.health()) finishChopping(player, entityId);
 
-                    hitCounts.merge(entityId, axe.getDamage(), Integer::sum);
+                    hitCounts.merge(entityId, axe.damage(), Integer::sum);
                     updateHealthDisplay(player, entityId, hits);
                     player.playSound(player.getLocation(), "block.wood.chop3", 1, 1);
                     player.swingMainHand();
@@ -107,7 +107,7 @@ public class TreeChopperManager {
     }
 
     private void chopTree(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
         Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
         if (skill == null) return;
@@ -182,7 +182,7 @@ public class TreeChopperManager {
 
         int currentHits = hitCounts.getOrDefault(entityId, 0);
         int remainingHits = (int) (skill.health() - currentHits);
-        hitCounts.put(entityId, currentHits + Math.min(axe.getCriticalHit(), remainingHits));
+        hitCounts.put(entityId, currentHits + Math.min(axe.criticalHit(), remainingHits));
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
         setTreeGlow(entityId, false);
     }
@@ -196,7 +196,7 @@ public class TreeChopperManager {
     }
 
     private boolean isPlayerOnline(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (!player.isOnline() && tree != null) {
             hitCounts.remove(entityId);
             playerHarvestingTree.remove(player.getUniqueId());
@@ -218,7 +218,7 @@ public class TreeChopperManager {
     }
 
     private boolean isTreeGlowing(UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return false;
         if (glowingTrees.containsKey(entityId)) {
             return false; // Already glowing
@@ -314,7 +314,7 @@ public class TreeChopperManager {
      * @param entityId the UUID of the tree entity
      */
     private void updateTextDisplay(UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
 
         TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
@@ -324,7 +324,7 @@ public class TreeChopperManager {
     }
 
     private void resetHealthDisplay(UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
         World world = tree.getWorld();
         if (healthDisplay.containsKey(entityId)) {
@@ -336,7 +336,7 @@ public class TreeChopperManager {
     }
 
     private void updateHealthDisplay(Player player, UUID entityId, int hits) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
         World world = tree.getWorld();
         if (!healthDisplay.containsKey(entityId)) return;
@@ -348,7 +348,7 @@ public class TreeChopperManager {
     }
 
     private void createHealthDisplay(Player player, UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
         Location displayLocation = tree.getLocation().clone().add(0, -0.5, 0.5);
         displayLocation.setYaw(180f);
@@ -371,7 +371,7 @@ public class TreeChopperManager {
     }
 
     private void resetTextDisplay(UUID entityId) {
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
 
         TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
@@ -405,7 +405,7 @@ public class TreeChopperManager {
     private Axe getPlayerAxe(Player player, List<Axe> axes) {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         for (Axe axe : axes) {
-            if (axe.getItem().equals(itemInHand)) {
+            if (axe.getItemStack().equals(itemInHand)) {
                 return axe;
             }
         }

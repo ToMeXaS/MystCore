@@ -26,11 +26,11 @@ public class PlayerManager {
         List<Axe> axes = tree.getAxes();
         if (axes.isEmpty()) return false;
         Axe axe = axes.stream()
-                .filter(a -> a.getItem().isSimilar(itemInHand))
+                .filter(a -> a.getItemStack().isSimilar(itemInHand))
                 .findFirst()
                 .orElse(null);
         if (axe == null) {
-            player.sendMessage("§cYou need to hold at least a §4" + axes.getFirst().getItem().getType() + "§c to chop the tree!");
+            player.sendMessage("§cYou need to hold at least a §4" + axes.getFirst().getItemStack().getType() + "§c to chop the tree!");
             player.setVelocity(player.getLocation().getDirection().multiply(-0.5).setY(0.3));
             return false;
         }

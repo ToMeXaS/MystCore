@@ -1,23 +1,11 @@
 package lt.tomexas.mystcore.resources.data.trees;
 
-import lombok.Getter;
 import lt.tomexas.mystcore.resources.managers.ItemManager;
 import org.bukkit.inventory.ItemStack;
 
-public class Axe {
-    private final String item;
-    @Getter
-    private final int damage;
-    @Getter
-    private final int criticalHit;
+public record Axe(String item, int damage, int criticalHit) {
 
-    public Axe(String item, int damage, int criticalHit) {
-        this.item = item;
-        this.damage = damage;
-        this.criticalHit = criticalHit;
-    }
-
-    public ItemStack getItem() {
+    public ItemStack getItemStack() {
         return ItemManager.getItemStack(item);
     }
 

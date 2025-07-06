@@ -94,7 +94,7 @@ public final class CommandManager {
         }
         UUID uuid = tree.getUuid();
 
-        if (Tree.hasTree(uuid)) {
+        if (Tree.exists(uuid)) {
             tree.setRespawnTime(respawnTime);
             player.sendMessage("§aRespawn time set successfully to " + respawnTime + " seconds!");
         } else {

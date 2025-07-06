@@ -21,7 +21,7 @@ public class BaseEntityInteractListener implements Listener {
     public void onEntityInteract(BaseEntityInteractEvent event) {
         Player player = event.getPlayer();
         UUID entityId = event.getBaseEntity().getUUID();
-        Tree tree = Tree.getTree(entityId);
+        Tree tree = Tree.getTreeByUuid(entityId);
         if (!event.getAction().equals(BaseEntityInteractEvent.Action.ATTACK)) return;
         if (tree == null) return;
         if (!PlayerManager.hasRequiredAxe(tree, player)) return;
