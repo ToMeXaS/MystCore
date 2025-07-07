@@ -12,6 +12,14 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 SIZE=""
 
+echo "AUTHOR=$AUTHOR"
+echo "BUILD_DURATION=$BUILD_DURATION"
+echo "RUN_URL=$RUN_URL"
+echo "TITLE=$TITLE"
+echo "COLOR=$COLOR"
+echo "TIMESTAMP=$TIMESTAMP"
+echo "FOOTER=$FOOTER"
+
 # Calculate JAR size and human-readable value
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
@@ -79,15 +87,6 @@ read -r -d '' PAYLOAD <<EOF
   }]
 }
 EOF
-
-echo "AUTHOR=$AUTHOR"
-echo "BUILD_DURATION=$BUILD_DURATION"
-echo "RUN_URL=$RUN_URL"
-echo "TITLE=$TITLE"
-echo "COLOR=$COLOR"
-echo "TIMESTAMP=$TIMESTAMP"
-echo "FOOTER=$FOOTER"
-
 
 echo "---- PAYLOAD ----"
 echo "$PAYLOAD"
