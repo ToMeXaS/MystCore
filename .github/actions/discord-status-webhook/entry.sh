@@ -19,11 +19,11 @@ SIZE=""
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
   if (( JAR_SIZE < 1024 )); then
-    SIZE="$JAR_SIZE bytes"
+    SIZE=$(printf "%.2f bytes" "$JAR_SIZE")
   elif (( JAR_SIZE < 1024 * 1024 )); then
-    SIZE="$((JAR_SIZE / 1024)) KB"
+    SIZE=$(printf "%.2f KB" "$(echo "$JAR_SIZE / 1024" | bc -l)")
   else
-    SIZE="$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB"
+    SIZE=$(printf "%.2f MB" "$(echo "$JAR_SIZE / 1024 / 1024" | bc -l)")
   fi
 fi
 
