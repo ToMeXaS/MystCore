@@ -61,7 +61,7 @@ jobs:
         uses: ./.github/actions/discord-status-webhook
         with:
           status: "build_success"
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           git_hash: ${{ steps.git-info.outputs.sha }}
           username: ${{ github.actor }}
           repo: ${{ github.repository }}
@@ -75,7 +75,7 @@ jobs:
         uses: ./.github/actions/discord-status-webhook
         with:
           status: "build_failure"
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           git_hash: ${{ steps.git-info.outputs.sha }}
           username: ${{ github.actor }}
           repo: ${{ github.repository }}
@@ -110,7 +110,7 @@ jobs:
         uses: ./.github/actions/discord-status-webhook
         with:
           status: "upload_success"
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           git_hash: ${{ steps.git-info.outputs.sha }}
           username: ${{ github.actor }}
           repo: ${{ github.repository }}
@@ -122,7 +122,7 @@ jobs:
         uses: ./.github/actions/discord-status-webhook
         with:
           status: "upload_failure"
-          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
           git_hash: ${{ steps.git-info.outputs.sha }}
           username: ${{ github.actor }}
           repo: ${{ github.repository }}
