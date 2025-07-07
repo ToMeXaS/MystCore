@@ -17,13 +17,13 @@ if [[ "$STATUS" == "build_failure" ]]; then
   COLOR=15158332
   TITLE="❌ Build Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false},"
+  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false}"
 elif [[ "$STATUS" == "upload_failure" ]]; then
   UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
   COLOR=15158332
   TITLE="❌ Upload Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false},"
+  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false}"
 elif [[ "$STATUS" == "upload_success" ]]; then
   COLOR=3447003
   TITLE="✅ Upload Successful"
