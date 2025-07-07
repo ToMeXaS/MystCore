@@ -7,7 +7,7 @@ REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 
-if [[ "$STATUS" == "success" && -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
+if [[ "$STATUS" == "build_success" || "$STATUS" == "upload_success" && -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
 fi
 
