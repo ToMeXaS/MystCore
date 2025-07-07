@@ -1,15 +1,18 @@
 #!/bin/bash
 set -e
 
+# Debug mode for CI troubleshooting. Remove or comment for production.
+set -x
+
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+
 JAR_SIZE="unknown"
 SIZE=""
-EXTRA_FIELDS=()
 
-# Calculate JAR size and human-readable size
+# Calculate JAR size and human-readable value
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
   if (( JAR_SIZE < 1024 )); then
@@ -21,47 +24,43 @@ if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   fi
 fi
 
+# Build status-dependent fields
+FIELDS_LIST=()
+FIELDS_LIST+=("{\"name\": \"Repository\", \"value\": \"[$REPO]($REPO_URL)\", \"inline\": true}")
+FIELDS_LIST+=("{\"name\": \"Branch\", \"value\": \"[$BRANCH]($BRANCH_URL)\", \"inline\": true}")
+FIELDS_LIST+=("{\"name\": \"Commit\", \"value\": \"[$GIT_HASH]($COMMIT_URL)\", \"inline\": true}")
+
 if [[ "$STATUS" == "build_failure" ]]; then
-  BUILD_LOG=$(tail -n 20 build.log 2>/dev/null || echo "No build log found.")
   COLOR=15158332
   TITLE="❌ Build Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false}")
+  BUILD_LOG=$(tail -n 20 build.log 2>/dev/null || echo "No build log found.")
+  FIELDS_LIST+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false}")
 elif [[ "$STATUS" == "upload_failure" ]]; then
-  UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
   COLOR=15158332
   TITLE="❌ Upload Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false}")
+  UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
+  FIELDS_LIST+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false}")
 elif [[ "$STATUS" == "upload_success" ]]; then
   COLOR=3447003
   TITLE="✅ Upload Successful"
   FOOTER="Upload Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    EXTRA_FIELDS+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
-    EXTRA_FIELDS+=("{\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true}")
   fi
 else
   COLOR=3066993
   TITLE="✅ Build Successful"
   FOOTER="Build Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    EXTRA_FIELDS+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
-    EXTRA_FIELDS+=("{\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true}")
   fi
 fi
 
-FIELDS_LIST=()
-FIELDS_LIST+=("{\"name\": \"Repository\", \"value\": \"[$REPO]($REPO_URL)\", \"inline\": true}")
-FIELDS_LIST+=("{\"name\": \"Branch\", \"value\": \"[$BRANCH]($BRANCH_URL)\", \"inline\": true}")
-FIELDS_LIST+=("{\"name\": \"Commit\", \"value\": \"[$GIT_HASH]($COMMIT_URL)\", \"inline\": true}")
-
-for fld in "${EXTRA_FIELDS[@]}"; do
-  FIELDS_LIST+=("$fld")
-done
-
 FIELDS_LIST+=("{\"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }")
-
 FIELDS_ARRAY="[$(IFS=,; echo "${FIELDS_LIST[*]}")]"
 
 read -r -d '' PAYLOAD <<EOF
@@ -90,5 +89,6 @@ CURL_EXIT_CODE=$?
 echo "Curl exit code: $CURL_EXIT_CODE"
 echo "Curl HTTP response: $HTTP_RESPONSE"
 if [ $CURL_EXIT_CODE -ne 0 ] || [[ $HTTP_RESPONSE != 2* ]]; then
+  echo "Discord webhook send failed!"
   exit 1
 fi
