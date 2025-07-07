@@ -40,7 +40,7 @@ jobs:
         run: echo "start=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Build with Gradle
-        run: ./gradlew build || tee build/reports/build.log
+        run: ./gradlew build || tee build.log
 
       - name: Record end time
         id: end-time
