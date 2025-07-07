@@ -74,7 +74,7 @@ read -r -d '' PAYLOAD <<EOF
       { "name": "Repository", "value": "[$REPO]($REPO_URL)", "inline": true },
       { "name": "Branch", "value": "[$BRANCH]($BRANCH_URL)", "inline": true },
       { "name": "Commit", "value": "[$GIT_HASH]($COMMIT_URL)", "inline": true },
-      $( [[ -n "$EXTRA_FIELDS" ]] && echo "$EXTRA_FIELDS" )
+      $( [[ -n "$EXTRA_FIELDS" ]] && echo ", $EXTRA_FIELDS" )
       { "name": " ", "value": "[[View Run Action]]($RUN_URL)", "inline": false }
 
     ],
