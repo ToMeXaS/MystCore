@@ -17,13 +17,15 @@ if [[ "$STATUS" == "build_failure" ]]; then
   COLOR=15158332
   TITLE="❌ Build Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false},"
+  EXTRA_FIELDS='{"name": "Error Log", "value": "```
+'"$BUILD_LOG"'```", "inline": false}'
 elif [[ "$STATUS" == "upload_failure" ]]; then
   UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
   COLOR=15158332
   TITLE="❌ Upload Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false},"
+  EXTRA_FIELDS='{"name": "Error Log", "value": "```
+'"$UPLOAD_LOG"'```", "inline": false}'
 elif [[ "$STATUS" == "upload_success" ]]; then
   COLOR=3447003
   TITLE="✅ Upload Successful"
@@ -39,7 +41,7 @@ elif [[ "$STATUS" == "upload_success" ]]; then
       else
         SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
       fi
-      EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true},"
+      EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "From → To", "value": "`artifacts/` → `/plugins`", "inline": true}'
     fi
   fi
 else
@@ -55,26 +57,25 @@ else
     else
       SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
     fi
-    EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true},"
+    EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "Build Duration", "value": "`'"$BUILD_DURATION"' s`", "inline": true}'
   fi
 fi
 
-FIELDS=$(cat <<EOF
-{ "name": "Repository", "value": "[$REPO]($REPO_URL)", "inline": true },
-{ "name": "Branch", "value": "[$BRANCH]($BRANCH_URL)", "inline": true },
-{ "name": "Commit", "value": "[$GIT_HASH]($COMMIT_URL)", "inline": true }
-EOF
-)
+FIELDS='
+{"name": "Repository", "value": "['"$REPO"']('"$REPO_URL"')", "inline": true},
+{"name": "Branch", "value": "['"$BRANCH"']('"$BRANCH_URL"')", "inline": true},
+{"name": "Commit", "value": "['"$GIT_HASH"']('"$COMMIT_URL"')", "inline": true}
+'
 
-# If EXTRA_FIELDS is not empty, add a comma and append it
+# Build the fields array safely
+FIELDS_ARRAY="["
+FIELDS_ARRAY+=$FIELDS
+
 if [[ -n "$EXTRA_FIELDS" ]]; then
-  FIELDS="$FIELDS,
-$EXTRA_FIELDS"
+  FIELDS_ARRAY+=","$EXTRA_FIELDS
 fi
 
-# Always add the final field
-FIELDS="$FIELDS,
-{ \"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }"
+FIELDS_ARRAY+=',{"name": " ", "value": "[[View Run Action]]('"$RUN_URL"')", "inline": false}]'
 
 read -r -d '' PAYLOAD <<EOF
 {
@@ -87,9 +88,7 @@ read -r -d '' PAYLOAD <<EOF
       "url": "https://github.com/$AUTHOR",
       "icon_url": "https://github.com/$AUTHOR.png"
     },
-    "fields": [
-      $FIELDS
-    ],
+    "fields": $FIELDS_ARRAY,
     "footer": { "text": "$FOOTER" }
   }]
 }
