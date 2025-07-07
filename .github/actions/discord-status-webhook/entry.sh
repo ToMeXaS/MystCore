@@ -6,10 +6,19 @@ COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
+SIZE=""
 EXTRA_FIELDS=""
 
-if [[ ("$STATUS" == "build_success" || "$STATUS" == "upload_success") && -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
+# Calculate JAR size and SIZE string if possible
+if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
+  if (( JAR_SIZE < 1024 )); then
+    SIZE="\`$JAR_SIZE bytes\`"
+  elif (( JAR_SIZE < 1024 * 1024 )); then
+    SIZE="\`$((JAR_SIZE / 1024)) KB\`"
+  else
+    SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
+  fi
 fi
 
 if [[ "$STATUS" == "build_failure" ]]; then
@@ -31,32 +40,15 @@ elif [[ "$STATUS" == "upload_success" ]]; then
   TITLE="✅ Upload Successful"
   FOOTER="Upload Job via GitHub Actions"
 
-  if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
-    JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
-    if [[ "$JAR_SIZE" != "unknown" ]]; then
-      if (( JAR_SIZE < 1024 )); then
-        SIZE="\`$JAR_SIZE bytes\`"
-      elif (( JAR_SIZE < 1024 * 1024 )); then
-        SIZE="\`$((JAR_SIZE / 1024)) KB\`"
-      else
-        SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
-      fi
-      EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "From → To", "value": "`artifacts/` → `/plugins`", "inline": true}'
-    fi
+  if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
+    EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "From → To", "value": "`artifacts/` → `/plugins`", "inline": true}'
   fi
 else
   COLOR=3066993
   TITLE="✅ Build Successful"
   FOOTER="Build Job via GitHub Actions"
 
-  if [[ "$JAR_SIZE" != "unknown" ]]; then
-    if (( JAR_SIZE < 1024 )); then
-      SIZE="\`$JAR_SIZE bytes\`"
-    elif (( JAR_SIZE < 1024 * 1024 )); then
-      SIZE="\`$((JAR_SIZE / 1024)) KB\`"
-    else
-      SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
-    fi
+  if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
     EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "Build Duration", "value": "`'"$BUILD_DURATION"' s`", "inline": true}'
   fi
 fi
