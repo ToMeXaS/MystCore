@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
-
-# Debug mode for CI troubleshooting. Remove or comment for production.
 set -x
+
+# Print all variables, uppercased, and their values uppercased
+for var in STATUS DISCORD_WEBHOOK_URL GIT_HASH USERNAME REPO BRANCH RUN_URL JAR_NAME BUILD_DURATION; do
+  echo "$var=${!var}"
+done
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
@@ -11,10 +14,6 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 
 JAR_SIZE="unknown"
 SIZE=""
-
-for var in STATUS DISCORD_WEBHOOK_URL GIT_HASH USERNAME REPO BRANCH RUN_URL JAR_NAME BUILD_DURATION; do
-  echo "$var=${!var}"
-done
 
 # Calculate JAR size and human-readable value
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
@@ -67,7 +66,8 @@ fi
 FIELDS_LIST+=("{\"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }")
 FIELDS_ARRAY="[$(IFS=,; echo "${FIELDS_LIST[*]}")]"
 
-read -r -d '' PAYLOAD <<EOF
+# Construct the JSON payload using command substitution (cat)
+PAYLOAD=$(cat <<EOF
 {
   "embeds": [{
     "title": "$TITLE",
@@ -83,6 +83,7 @@ read -r -d '' PAYLOAD <<EOF
   }]
 }
 EOF
+)
 
 echo "---- PAYLOAD ----"
 echo "$PAYLOAD"
