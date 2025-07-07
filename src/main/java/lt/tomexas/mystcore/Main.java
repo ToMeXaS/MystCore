@@ -5,10 +5,7 @@ import com.bgsoftware.superiorskyblock.api.SuperiorSkyblockAPI;
 import com.bgsoftware.superiorskyblock.api.island.Island;
 import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
 import lombok.Getter;
-import lt.tomexas.mystcore.listeners.BlockBreakListener;
-import lt.tomexas.mystcore.listeners.EntityDamageByEntityListener;
-import lt.tomexas.mystcore.listeners.PlayerJoinListener;
-import lt.tomexas.mystcore.listeners.PlayerMoveListener;
+import lt.tomexas.mystcore.listeners.*;
 import lt.tomexas.mystcore.playerfontimage.PlayerFontImage;
 import lt.tomexas.mystcore.submodules.resources.ResourcesMain;
 import lt.tomexas.mystcore.submodules.resources.listeners.BaseEntityInteractListener;
@@ -44,12 +41,16 @@ public final class Main extends JavaPlugin {
     private PlayerFontImage playerFontImage;
 
     @Override
+    public void onLoad() {
+        registerWorldGuardFlags();
+    }
+
+    @Override
     public void onEnable() {
         instance = this;
         new ResourcesMain();
         this.playerFontImage = PlayerFontImage.initialize(this);
         setupDatabases();
-        registerWorldGuardFlags();
         registerEvents();
         registerCommands();
         registerPlaceholders();
@@ -106,6 +107,7 @@ public final class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EntityDamageByEntityListener(), this);
         getServer().getPluginManager().registerEvents(new BaseEntityInteractListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerAreaEnterListener(), this);
     }
 
     private void registerCommands() {

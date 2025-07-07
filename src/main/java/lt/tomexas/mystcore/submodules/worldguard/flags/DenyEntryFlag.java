@@ -11,23 +11,18 @@ import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
-import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.MystPlayer;
-import lt.tomexas.mystcore.listeners.PlayerAreaEnterListener;
 import org.bukkit.entity.Player;
 
 public class DenyEntryFlag {
 
     public static IntegerFlag DENY_ENTRY_CODE_FLAG = new IntegerFlag("deny-entry-combat");
 
-    private static final Main plugin = Main.getInstance();
-
     // Call this from your plugin's onEnable()
     public static void register() {
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
         try {
             registry.register(DENY_ENTRY_CODE_FLAG);
-            plugin.getServer().getPluginManager().registerEvents(new PlayerAreaEnterListener(), plugin);
         } catch (FlagConflictException e) {
             Flag<?> existing = registry.get("deny-entry-combat");
             if (existing instanceof IntegerFlag) {
