@@ -19,11 +19,11 @@ SIZE=""
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
   if (( JAR_SIZE < 1024 )); then
-    SIZE="\`$JAR_SIZE bytes\`"
+    SIZE="$JAR_SIZE bytes"
   elif (( JAR_SIZE < 1024 * 1024 )); then
-    SIZE="\`$((JAR_SIZE / 1024)) KB\`"
+    SIZE="$((JAR_SIZE / 1024)) KB"
   else
-    SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
+    SIZE="$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB"
   fi
 fi
 
@@ -50,7 +50,7 @@ elif [[ "$STATUS" == "upload_success" ]]; then
   TITLE="✅ Upload Successful"
   FOOTER="Upload Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\ ($SIZE)\`\", \"inline\": true}")
     FIELDS_LIST+=("{\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true}")
   fi
 else
@@ -58,7 +58,7 @@ else
   TITLE="✅ Build Successful"
   FOOTER="Build Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME ($SIZE)\`\", \"inline\": true}")
     FIELDS_LIST+=("{\"name\": \"Build Time\", \"value\": \"\`$BUILD_DURATION sec\`\", \"inline\": true}")
   fi
 fi
