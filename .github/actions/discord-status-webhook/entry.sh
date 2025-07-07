@@ -1,6 +1,5 @@
 #!/bin/bash
 set -e
-set -x
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
@@ -65,19 +64,29 @@ else
   fi
 fi
 
-FIELDS='
-{"name": "Repository", "value": "['"$REPO"']('"$REPO_URL"')", "inline": true},
-{"name": "Branch", "value": "['"$BRANCH"']('"$BRANCH_URL"')", "inline": true},
-{"name": "Commit", "value": "['"$GIT_HASH"']('"$COMMIT_URL"')", "inline": true}
-'
+FIELDS_LIST=()
 
-# Build the fields array safely
-FIELDS_ARRAY="$FIELDS"
+FIELDS_LIST+=("{\"name\": \"Repository\", \"value\": \"[$REPO]($REPO_URL)\", \"inline\": true}")
+FIELDS_LIST+=("{\"name\": \"Branch\", \"value\": \"[$BRANCH]($BRANCH_URL)\", \"inline\": true}")
+FIELDS_LIST+=("{\"name\": \"Commit\", \"value\": \"[$GIT_HASH]($COMMIT_URL)\", \"inline\": true}")
+
 if [[ -n "$EXTRA_FIELDS" ]]; then
-  FIELDS_ARRAY="$FIELDS_ARRAY, $EXTRA_FIELDS"
+  # Split EXTRA_FIELDS in case it contains multiple fields
+  IFS='},' read -ra ADDR <<< "$EXTRA_FIELDS"
+  for i in "${ADDR[@]}"; do
+    # Add back the closing } if it's missing
+    [[ $i != *"}" ]] && i="$i}"
+    # Remove leading comma and whitespace
+    i="${i#, }"
+    FIELDS_LIST+=("$i")
+  done
 fi
-FIELDS_ARRAY="$FIELDS_ARRAY, {\"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }"
-FIELDS_ARRAY="[$FIELDS_ARRAY]"
+
+FIELDS_LIST+=("{\"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }")
+
+FIELDS_ARRAY="["
+FIELDS_ARRAY+=$(IFS=, ; echo "${FIELDS_LIST[*]}")
+FIELDS_ARRAY+="]"
 
 read -r -d '' PAYLOAD <<EOF
 {
@@ -96,13 +105,4 @@ read -r -d '' PAYLOAD <<EOF
 }
 EOF
 
-echo "Payload to Discord:"
-echo "$PAYLOAD"
-
-HTTP_RESPONSE=$(curl -s -w "%{http_code}" -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL")
-CURL_EXIT_CODE=$?
-echo "Curl exit code: $CURL_EXIT_CODE"
-echo "Curl HTTP response: $HTTP_RESPONSE"
-if [ $CURL_EXIT_CODE -ne 0 ] || [[ $HTTP_RESPONSE != 2* ]]; then
-  exit 1
-fi
+curl -s -w "%{http_code}" -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
