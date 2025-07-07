@@ -1,0 +1,24 @@
+name: "Discord Commit Webhook"
+description: "Sends a Discord webhook with commit info and changed files"
+inputs:
+  webhook:
+    description: "Discord webhook URL"
+    required: true
+  sha:
+    description: "Git commit SHA"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: chmod +x ${{ github.action_path }}/entry.sh
+      shell: bash
+
+    - run: ${{ github.action_path }}/entry.sh
+      shell: bash
+      env:
+        DISCORD_WEBHOOK_URL: ${{ inputs.webhook }}
+        GIT_HASH: ${{ inputs.sha }}
+        AUTHOR: ${{ github.actor }}
+        REPO: ${{ github.repository }}
+        BRANCH: ${{ github.ref_name }}

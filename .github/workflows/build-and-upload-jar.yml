@@ -9,8 +9,7 @@ jobs:
   build-and-upload:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      packages: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -22,72 +21,10 @@ jobs:
         run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Send Discord Webhook on Commit
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          AUTHOR: ${{ github.actor }}
-          REPO: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-        run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
-          REPO_URL="https://github.com/$REPO"
-          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          CHANGED_FILES=($(git diff --name-only $GITHUB_SHA^ $GITHUB_SHA))
-          
-          if [ ${#CHANGED_FILES[@]} -eq 0 ]; then
-            CHANGED_FILES_LIST="No files changed."
-          else
-            CHANGED_FILES_LIST=$(for f in "${CHANGED_FILES[@]}"; do
-              fname=$(basename "$f")
-              url="https://github.com/$REPO/blob/$GIT_HASH/$f"
-              printf -- "- [%s](%s)\n" "$fname" "$url"
-            done)
-          fi
-          
-          MAX_LENGTH=900
-          if [ ${#CHANGED_FILES_LIST} -gt $MAX_LENGTH ]; then
-          CHANGED_FILES_LIST="${CHANGED_FILES_LIST:0:$MAX_LENGTH}\n...and more files not shown."
-          fi
-
-          json=$(jq -n \
-          --arg title "📦 New Commit Pushed" \
-          --arg repo "$REPO" \
-          --arg repo_url "$REPO_URL" \
-          --arg branch "$BRANCH" \
-          --arg branch_url "$BRANCH_URL" \
-          --arg commit "$GIT_HASH" \
-          --arg commit_url "$COMMIT_URL" \
-          --arg commit_message "$COMMIT_MESSAGE" \
-          --arg author "$AUTHOR" \
-          --arg timestamp "$TIMESTAMP" \
-          --arg changed "$CHANGED_FILES_LIST" \
-          '{
-            embeds: [{
-              title: $title,
-              color: 3447003,
-              timestamp: $timestamp,
-              author: {
-                name: $author,
-                url: "https://github.com/\($author)",
-                icon_url: "https://github.com/\($author).png"
-              },
-              fields: [
-                { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
-                { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: "Changed Files", value: $changed, inline: false },
-                { name: "Message", value: "```\($commit_message)```", inline: false }
-              ],
-              footer: { text: "Commit detected by GitHub Actions" }
-            }]
-          }')
-
-          curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
-
-      - name: Record start time
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+        uses: ./.github/actions/discord-commit-webhook
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          sha: ${{ steps.git-info.outputs.sha }}
 
       - uses: actions/setup-java@v4
         with:
@@ -98,8 +35,16 @@ jobs:
 
       - run: chmod +x ./gradlew
 
+      - name: Record start time
+        id: start_time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_OUTPUT
+
       - name: Build with Gradle
         run: ./gradlew build || tee build/reports/build.log
+
+      - name: Record end time
+        id: end_time
+        run: echo "END_TIME=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Get Jar file name
         id: get_jar
@@ -107,123 +52,31 @@ jobs:
           jar_name=$(ls artifacts/*.jar | head -n 1 | xargs -n 1 basename)
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
-      - name: Send Discord Webhook on Build Failure
-        if: failure()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          AUTHOR: ${{ github.actor }}
-          REPO: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          REPO_URL="https://github.com/$REPO"
-          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          BUILD_LOG=$(tail -n 20 build/reports/build.log 2>/dev/null || echo "No build log found.")
-          json=$(jq -n \
-          --arg title "❌ Build Failed" \
-          --arg repo "$REPO" \
-          --arg repo_url "$REPO_URL" \
-          --arg branch "$BRANCH" \
-          --arg branch_url "$BRANCH_URL" \
-          --arg commit "$GIT_HASH" \
-          --arg commit_url "$COMMIT_URL" \
-          --arg author "$AUTHOR" \
-          --arg timestamp "$TIMESTAMP" \
-          --arg run_url "$GITHUB_RUN_URL" \
-          --arg build_log "$BUILD_LOG" \
-          '{
-            embeds: [
-              {
-                title: $title,
-                color: 15158332,
-                timestamp: $timestamp,
-                author: {
-                  name: $author,
-                  url: ("https://github.com/\($author)"),
-                  icon_url: ("https://github.com/\($author).png")
-                },
-                fields: [
-                  { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
-                  { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                  { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                  { name: "Error Log", value: "```\($build_log)```", inline: false },
-                  { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
-                ],
-                footer: {
-                  text: "Failed Job via GitHub Actions"
-                }
-              }
-            ]
-          }')
-
-          curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
-
-      - name: Send Discord Webhook on Build Success
+      - name: Notify Success
         if: success()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          AUTHOR: ${{ github.actor }}
-          REPO: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-          JAR_NAME: ${{ steps.get_jar.outputs.jar_name }}
-          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          END_TIME=$(date +%s)
-          DURATION=$((END_TIME - START_TIME))
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          REPO_URL="https://github.com/$REPO"
-          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
-          json=$(jq -n \
-          --arg title "✅ Build Successful" \
-          --arg author "$AUTHOR" \
-          --arg repo "$REPO" --arg repo_url "$REPO_URL" \
-          --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
-          --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-          --arg duration "${DURATION}s" \
-          --arg timestamp "$TIMESTAMP" \
-          --arg jar "$JAR_NAME" \
-          --arg jar_size "$JAR_SIZE" \
-          --arg run_url "$GITHUB_RUN_URL" \
-          '{
-            embeds: [{
-              title: $title,
-              color: 3066993,
-              timestamp: $timestamp,
-              author: {
-                name: $author,
-                url: "https://github.com/\($author)",
-                icon_url: "https://github.com/\($author).png"
-              },
-              fields: [
-                { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
-                { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: "Jar File", value: "`\($jar)`", inline: true }, 
-                { name: "Build Duration", value: "`\($duration)`", inline: true },
-                {
-                    name: "File Size",
-                    value: ($jar_size | tonumber as $size |
-                      if $size < 1024 then
-                      ("`" + ($size | tostring) + " bytes`")
-                      elif $size < 1024 * 1024 then
-                      ("`" + ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB`")
-                      else
-                      ("`" + ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB`")
-                      end),
-                    inline: true
-                  },
-                { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
-              ],
-              footer: { text: "Built via GitHub Actions" }
-            }]
-          }')
-          curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
+        uses: ./.github/actions/discord-status-webhook
+        with:
+          status: "build_success"
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          git_hash: ${{ steps.git-info.outputs.sha }}
+          username: ${{ github.actor }}
+          repo: ${{ github.repository }}
+          branch: ${{ github.ref_name }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          jar_name: ${{ steps.get_jar.outputs.jar_name }}
+          build_duration: ${{ (steps.end_time.outputs.END_TIME - steps.start_time.outputs.START_TIME) | toString }}
+
+      - name: Notify Failure
+        if: failure()
+        uses: ./.github/actions/discord-status-webhook
+        with:
+          status: "build_failure"
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          git_hash: ${{ steps.git-info.outputs.sha }}
+          username: ${{ github.actor }}
+          repo: ${{ github.repository }}
+          branch: ${{ github.ref_name }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Add SFTP host key to known_hosts
         run: |
@@ -248,109 +101,26 @@ jobs:
           SFTP_PORT: ${{ secrets.SFTP_PORT }}
           SFTP_PASS: ${{ secrets.SFTP_PASS }}
 
-      - name: Send Discord Webhook on Upload Failure
-        if: failure()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          AUTHOR: ${{ github.actor }}
-          REPO: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          REPO_URL="https://github.com/$REPO"
-          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
-          json=$(jq -n \
-          --arg title "❌ Upload Failed" \
-          --arg author "$AUTHOR" \
-          --arg repo "$REPO" --arg repo_url "$REPO_URL" \
-          --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
-          --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-          --arg run_url "$GITHUB_RUN_URL" \
-          --arg timestamp "$TIMESTAMP" \
-          --arg upload_log "$UPLOAD_LOG" \
-          '{
-            embeds: [{
-              title: $title,
-              color: 15158332,
-              timestamp: $timestamp,
-              author: {
-                name: $author,
-                url: "https://github.com/\($author)",
-                icon_url: "https://github.com/\($author).png"
-              },
-              fields: [
-                { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
-                { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: "Error Log", value: "```\($upload_log)```", inline: false },
-                { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
-              ],
-              footer: { text: "Upload failed via GitHub Actions" }
-            }]
-          }')
-          curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
-
-      - name: Send Discord Webhook on Upload Success
+      - name: Notify Success
         if: success()
-        env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          GIT_HASH: ${{ steps.git-info.outputs.sha }}
-          AUTHOR: ${{ github.actor }}
-          REPO: ${{ github.repository }}
-          BRANCH: ${{ github.ref_name }}
-          JAR_NAME: ${{ steps.get_jar.outputs.jar_name }}
-          FROM_DIR: artifacts/
-          TO_DIR: /plugins
-          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
-          REPO_URL="https://github.com/$REPO"
-          BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-          JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME" 2>/dev/null || echo "unknown")
-          json=$(jq -n \
-          --arg title "📤 Upload Successful" \
-          --arg author "$AUTHOR" \
-          --arg repo "$REPO" --arg repo_url "$REPO_URL" \
-          --arg branch "$BRANCH" --arg branch_url "$BRANCH_URL" \
-          --arg commit "$GIT_HASH" --arg commit_url "$COMMIT_URL" \
-          --arg jar "$JAR_NAME" \
-          --arg jar_size "$JAR_SIZE" \
-          --arg from "$FROM_DIR" \
-          --arg to "$TO_DIR" \
-          --arg timestamp "$TIMESTAMP" \
-          --arg run_url "$GITHUB_RUN_URL" \
-          '{
-            embeds: [{
-              title: $title,
-              color: 3447003,
-              timestamp: $timestamp,
-              author: {
-                name: $author,
-                url: "https://github.com/\($author)",
-                icon_url: "https://github.com/\($author).png"
-              },
-              fields: [
-                { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
-                { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-                { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-                { name: "Jar & Size", value: "`\($jar)` `(\($jar_size | tonumber as $size |
-                  if $size < 1024 then
-                    ($size | tostring) + " bytes"
-                  elif $size < 1024 * 1024 then
-                    ((($size / 1024) | . * 100 | floor / 100) | tostring) + " KB"
-                  else
-                    ((($size / 1024 / 1024) | . * 100 | floor / 100) | tostring) + " MB"
-                  end
-                ))`", inline: true },
-                { name: "From → To", value: "`\($from)` → `\($to)`", inline: true },
-                { name: " ", value: "[[View Run Action]](\($run_url))", inline: false }
-              ],
-              footer: { text: "Uploaded via GitHub Actions" }
-            }]
-          }')
-          curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
+        uses: ./.github/actions/discord-status-webhook
+        with:
+          status: "upload_success"
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          git_hash: ${{ steps.git-info.outputs.sha }}
+          username: ${{ github.actor }}
+          repo: ${{ github.repository }}
+          branch: ${{ github.ref_name }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Notify Failure
+        if: failure()
+        uses: ./.github/actions/discord-status-webhook
+        with:
+          status: "upload_failure"
+          webhook: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          git_hash: ${{ steps.git-info.outputs.sha }}
+          username: ${{ github.actor }}
+          repo: ${{ github.repository }}
+          branch: ${{ github.ref_name }}
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

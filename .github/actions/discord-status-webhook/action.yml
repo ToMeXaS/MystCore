@@ -1,0 +1,48 @@
+name: "Discord Build Notifier"
+description: "Send success/failure messages to a Discord webhook."
+inputs:
+  status:
+    description: "The build status (success or failure)"
+    required: true
+  webhook:
+    description: "Discord webhook URL"
+    required: true
+  git_hash:
+    description: "Git commit SHA"
+    required: true
+  username:
+    description: "Author of the commit"
+    required: true
+  repo:
+    description: "Repository full name"
+    required: true
+  branch:
+    description: "Branch name"
+    required: true
+  run_url:
+    description: "GitHub Action run URL"
+    required: true
+  jar_name:
+    description: "Name of the built JAR file"
+    required: false
+  build_duration:
+    description: "Duration of the build in seconds"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Send Discord Notification
+      shell: bash
+      env:
+        STATUS: ${{ inputs.status }}
+        DISCORD_WEBHOOK_URL: ${{ inputs.webhook }}
+        GIT_HASH: ${{ inputs.git_hash }}
+        AUTHOR: ${{ inputs.author }}
+        REPO: ${{ inputs.repo }}
+        BRANCH: ${{ inputs.branch }}
+        RUN_URL: ${{ inputs.run_url }}
+        JAR_NAME: ${{ inputs.jar_name }}
+        BUILD_DURATION: ${{ inputs.build_duration }}
+      run: |
+        bash ${{ github.action_path }}/entry.sh
