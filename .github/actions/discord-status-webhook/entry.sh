@@ -12,13 +12,9 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 SIZE=""
 
-echo "AUTHOR=$AUTHOR"
-echo "BUILD_DURATION=$BUILD_DURATION"
-echo "RUN_URL=$RUN_URL"
-echo "TITLE=$TITLE"
-echo "COLOR=$COLOR"
-echo "TIMESTAMP=$TIMESTAMP"
-echo "FOOTER=$FOOTER"
+for var in status webhook git_hash username repo branch run_url jar_name build_duration; do
+  echo "$var=${!var}"
+done
 
 # Calculate JAR size and human-readable value
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
