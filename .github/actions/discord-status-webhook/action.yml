@@ -4,7 +4,7 @@ inputs:
   status:
     description: "The build status (success or failure)"
     required: true
-  webhook:
+  discord_webhook_url:
     description: "Discord webhook URL"
     required: true
   git_hash:
@@ -36,9 +36,9 @@ runs:
       shell: bash
       env:
         STATUS: ${{ inputs.status }}
-        DISCORD_WEBHOOK_URL: ${{ inputs.webhook }}
+        DISCORD_WEBHOOK_URL: ${{ inputs.discord_webhook_url }}
         GIT_HASH: ${{ inputs.git_hash }}
-        AUTHOR: ${{ inputs.username }}
+        USERNAME: ${{ inputs.username }}
         REPO: ${{ inputs.repo }}
         BRANCH: ${{ inputs.branch }}
         RUN_URL: ${{ inputs.run_url }}

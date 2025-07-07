@@ -12,7 +12,7 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 SIZE=""
 
-for var in STATUS WEBHOOK GIT_HASH USERNAME REPO BRANCH RUN_URL JAR_NAME BUILD_DURATION; do
+for var in STATUS DISCORD_WEBHOOK_URL GIT_HASH USERNAME REPO BRANCH RUN_URL JAR_NAME BUILD_DURATION; do
   echo "$var=${!var}"
 done
 
@@ -74,9 +74,9 @@ read -r -d '' PAYLOAD <<EOF
     "color": $COLOR,
     "timestamp": "$TIMESTAMP",
     "author": {
-      "name": "$AUTHOR",
-      "url": "https://github.com/$AUTHOR",
-      "icon_url": "https://github.com/$AUTHOR.png"
+      "name": "$USERNAME",
+      "url": "https://github.com/$USERNAME",
+      "icon_url": "https://github.com/$USERNAME.png"
     },
     "fields": $FIELDS_ARRAY,
     "footer": { "text": "$FOOTER" }
