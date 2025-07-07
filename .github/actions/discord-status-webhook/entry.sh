@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-set -x
+#set -x
 
 # Print all variables, uppercased, and their values uppercased
 for var in STATUS DISCORD_WEBHOOK_URL GIT_HASH USERNAME REPO BRANCH RUN_URL JAR_NAME BUILD_DURATION; do
@@ -59,7 +59,7 @@ else
   FOOTER="Build Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
     FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
-    FIELDS_LIST+=("{\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Build Time\", \"value\": \"\`$BUILD_DURATION sec\`\", \"inline\": true}")
   fi
 fi
 

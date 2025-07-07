@@ -116,6 +116,7 @@ jobs:
           repo: ${{ github.repository }}
           branch: ${{ github.ref_name }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          jar_name: ${{ steps.get_jar.outputs.jar_name }}
 
       - name: Notify Failure
         if: failure()
