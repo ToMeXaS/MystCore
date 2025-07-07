@@ -50,7 +50,7 @@ elif [[ "$STATUS" == "upload_success" ]]; then
   TITLE="✅ Upload Successful"
   FOOTER="Upload Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\ ($SIZE)\`\", \"inline\": true}")
+    FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME ($SIZE)\`\", \"inline\": true}")
     FIELDS_LIST+=("{\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true}")
   fi
 else
