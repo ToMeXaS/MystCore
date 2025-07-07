@@ -28,6 +28,7 @@ repositories {
     }
     maven { url 'https://mvn.lumine.io/repository/maven-public/' }
     maven { url = "https://repo.aikar.co/content/groups/aikar/" }
+    maven { url "https://maven.enginehub.org/repo/" }
 }
 
 dependencies {
@@ -40,6 +41,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok:1.18.32'
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
     implementation 'co.aikar:acf-paper:0.5.1-SNAPSHOT'
+    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.8-SNAPSHOT'
 }
 
 tasks {

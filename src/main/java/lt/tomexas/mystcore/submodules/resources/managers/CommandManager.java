@@ -1,7 +1,7 @@
-package lt.tomexas.mystcore.resources.managers;
+package lt.tomexas.mystcore.submodules.resources.managers;
 
-import lt.tomexas.mystcore.resources.ResourcesMain;
-import lt.tomexas.mystcore.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.ResourcesMain;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;

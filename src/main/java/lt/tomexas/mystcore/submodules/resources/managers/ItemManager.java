@@ -1,8 +1,8 @@
-package lt.tomexas.mystcore.resources.managers;
+package lt.tomexas.mystcore.submodules.resources.managers;
 
-import lt.tomexas.mystcore.resources.data.trees.Axe;
-import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.utils.PersistentDataUtil;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.utils.PersistentDataUtil;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;

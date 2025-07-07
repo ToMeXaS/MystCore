@@ -1,11 +1,11 @@
-package lt.tomexas.mystcore.resources.commands;
+package lt.tomexas.mystcore.submodules.resources.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
-import lt.tomexas.mystcore.resources.managers.CommandManager;
+import lt.tomexas.mystcore.submodules.resources.managers.CommandManager;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.util.RayTraceResult;

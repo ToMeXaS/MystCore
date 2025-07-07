@@ -10,12 +10,13 @@ import lt.tomexas.mystcore.listeners.EntityDamageByEntityListener;
 import lt.tomexas.mystcore.listeners.PlayerJoinListener;
 import lt.tomexas.mystcore.listeners.PlayerMoveListener;
 import lt.tomexas.mystcore.playerfontimage.PlayerFontImage;
-import lt.tomexas.mystcore.resources.ResourcesMain;
-import lt.tomexas.mystcore.resources.listeners.BaseEntityInteractListener;
-import lt.tomexas.mystcore.resources.ResourcesDatabase;
-import lt.tomexas.mystcore.resources.listeners.PlayerInteractListener;
-import lt.tomexas.mystcore.resources.commands.MystResourcesCommand;
-import lt.tomexas.mystcore.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.ResourcesMain;
+import lt.tomexas.mystcore.submodules.resources.listeners.BaseEntityInteractListener;
+import lt.tomexas.mystcore.submodules.resources.ResourcesDatabase;
+import lt.tomexas.mystcore.submodules.resources.listeners.PlayerInteractListener;
+import lt.tomexas.mystcore.submodules.resources.commands.MystResourcesCommand;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.worldguard.flags.DenyEntryFlag;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -48,6 +49,7 @@ public final class Main extends JavaPlugin {
         new ResourcesMain();
         this.playerFontImage = PlayerFontImage.initialize(this);
         setupDatabases();
+        registerWorldGuardFlags();
         registerEvents();
         registerCommands();
         registerPlaceholders();
@@ -93,6 +95,10 @@ public final class Main extends JavaPlugin {
         }
     }
 
+    private void registerWorldGuardFlags() {
+        DenyEntryFlag.register();
+    }
+
     private void registerEvents() {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerMoveListener(), this);
@@ -119,7 +125,8 @@ public final class Main extends JavaPlugin {
     private void initializePlayers() {
         database.getAllPlayerHeads().forEach((uuid, playerHead) -> {
             OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-            new MystPlayer(player, playerHead, null);
+            PlayerData playerData = PlayerData.get(player.getUniqueId());
+            new MystPlayer(player, playerData, playerHead, null);
         });
     }
 

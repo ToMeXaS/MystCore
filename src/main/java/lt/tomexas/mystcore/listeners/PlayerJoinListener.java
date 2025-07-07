@@ -4,6 +4,7 @@ import lt.tomexas.mystcore.Database;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.MystPlayer;
 import lt.tomexas.mystcore.playerfontimage.impl.MinotarSource;
+import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,6 +27,7 @@ public class PlayerJoinListener implements Listener {
             playerHead = database.getPlayerHead(player);
         }
 
-        new MystPlayer(player, playerHead, null);
+        PlayerData playerData = PlayerData.get(player.getUniqueId());
+        new MystPlayer(player, playerData, playerHead, null);
     }
 }

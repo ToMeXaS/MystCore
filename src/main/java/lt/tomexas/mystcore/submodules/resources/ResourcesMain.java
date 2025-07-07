@@ -1,14 +1,11 @@
-package lt.tomexas.mystcore.resources;
+package lt.tomexas.mystcore.submodules.resources;
 
 import lombok.Getter;
-import lombok.Setter;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.resources.managers.PlayerManager;
-import lt.tomexas.mystcore.resources.managers.TreeChopperManager;
-import lt.tomexas.mystcore.resources.managers.TreeConfigManager;
+import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
+import lt.tomexas.mystcore.submodules.resources.managers.TreeConfigManager;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.checkerframework.checker.units.qual.C;
 
 import java.io.File;
 import java.util.HashMap;

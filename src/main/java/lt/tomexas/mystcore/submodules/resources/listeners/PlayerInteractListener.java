@@ -1,13 +1,13 @@
-package lt.tomexas.mystcore.resources.listeners;
+package lt.tomexas.mystcore.submodules.resources.listeners;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
-import lt.tomexas.mystcore.resources.data.trees.Axe;
-import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.Tree;
-import lt.tomexas.mystcore.resources.utils.PersistentDataUtil;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.utils.PersistentDataUtil;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;

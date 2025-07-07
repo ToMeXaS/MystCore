@@ -1,8 +1,8 @@
-package lt.tomexas.mystcore.resources.utils;
+package lt.tomexas.mystcore.submodules.resources.utils;
 
 import lt.tomexas.mystcore.Main;
-import lt.tomexas.mystcore.resources.data.trees.Axe;
-import lt.tomexas.mystcore.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;

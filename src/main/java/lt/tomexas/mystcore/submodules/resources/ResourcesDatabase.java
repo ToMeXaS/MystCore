@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.resources;
+package lt.tomexas.mystcore.submodules.resources;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.handler.AnimationHandler;
@@ -8,9 +8,9 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.resources.data.trees.Axe;
-import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;

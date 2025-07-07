@@ -1,8 +1,9 @@
-package lt.tomexas.mystcore.resources.managers;
+package lt.tomexas.mystcore.submodules.resources.managers;
 
-import lt.tomexas.mystcore.resources.data.trees.Axe;
-import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.Tree;
+import lt.tomexas.mystcore.MystPlayer;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -39,7 +40,9 @@ public class PlayerManager {
     }
 
     public static boolean hasRequiredLevel(Tree tree, Player player) {
-        PlayerData playerData = PlayerData.get(player.getUniqueId());
+        MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
+        if (mystPlayer == null) return false;
+        PlayerData playerData = mystPlayer.getPlayerData();
         Skill skill = tree.getSkillData().stream()
                 .min(Comparator.comparingInt(Skill::level))
                 .orElse(null);
@@ -58,7 +61,9 @@ public class PlayerManager {
     }
 
     public static boolean hasRequiredStamina(Tree tree, Player player) {
-        PlayerData playerData = PlayerData.get(player.getUniqueId());
+        MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
+        if (mystPlayer == null) return false;
+        PlayerData playerData = mystPlayer.getPlayerData();
         Skill skill = tree.getSkillData().stream()
                 .max(Comparator.comparingInt(Skill::level))
                 .orElse(null);

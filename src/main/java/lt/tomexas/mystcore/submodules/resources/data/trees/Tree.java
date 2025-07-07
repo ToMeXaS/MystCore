@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.resources.data.trees;
+package lt.tomexas.mystcore.submodules.resources.data.trees;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import lombok.Getter;

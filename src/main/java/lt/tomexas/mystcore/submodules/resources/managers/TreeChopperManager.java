@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.resources.managers;
+package lt.tomexas.mystcore.submodules.resources.managers;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
@@ -6,9 +6,9 @@ import com.ticxo.modelengine.api.entity.BaseEntity;
 import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.resources.data.trees.Axe;
-import lt.tomexas.mystcore.resources.data.trees.Skill;
-import lt.tomexas.mystcore.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import net.Indyuce.mmocore.MMOCore;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;

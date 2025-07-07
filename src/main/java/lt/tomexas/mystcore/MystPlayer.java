@@ -2,6 +2,7 @@ package lt.tomexas.mystcore;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,6 +15,8 @@ public class MystPlayer {
 
     private final OfflinePlayer player;
     @Getter
+    private PlayerData playerData;
+    @Getter
     private final String playerFontImage;
     @Setter
     @Getter
@@ -22,8 +25,9 @@ public class MystPlayer {
     @Getter
     private boolean jumping;
 
-    public MystPlayer(@NotNull OfflinePlayer player, @NotNull String playerFontImage, @Nullable List<OfflinePlayer> islandMembers) {
+    public MystPlayer(@NotNull OfflinePlayer player, @NotNull PlayerData playerData, @NotNull String playerFontImage, @Nullable List<OfflinePlayer> islandMembers) {
         this.player = player;
+        this.playerData = playerData;
         this.playerFontImage = playerFontImage;
         this.islandMembers = islandMembers;
         REGISTRY.put(player.getUniqueId(), this);

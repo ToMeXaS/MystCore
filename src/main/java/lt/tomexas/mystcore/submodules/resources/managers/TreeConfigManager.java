@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.resources.managers;
+package lt.tomexas.mystcore.submodules.resources.managers;
 
 import lt.tomexas.mystcore.Main;
 import org.bukkit.configuration.file.FileConfiguration;
