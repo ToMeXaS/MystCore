@@ -8,6 +8,15 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 EXTRA_FIELDS=""
 
+# Check required env vars
+required_vars=(REPO GIT_HASH BRANCH AUTHOR RUN_URL DISCORD_WEBHOOK_URL STATUS)
+for var in "${required_vars[@]}"; do
+  if [[ -z "${!var}" ]]; then
+    echo "Error: environment variable $var is not set"
+    exit 1
+  fi
+done
+
 if [[ ("$STATUS" == "build_success" || "$STATUS" == "upload_success") && -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
 fi
