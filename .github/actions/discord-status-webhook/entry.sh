@@ -7,20 +7,9 @@ REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 SIZE=""
-EXTRA_FIELDS=""
+EXTRA_FIELDS=()
 
-# Print all vars for debug
-echo "REPO=$REPO"
-echo "GIT_HASH=$GIT_HASH"
-echo "BRANCH=$BRANCH"
-echo "JAR_NAME=$JAR_NAME"
-echo "STATUS=$STATUS"
-echo "AUTHOR=$AUTHOR"
-echo "RUN_URL=$RUN_URL"
-echo "BUILD_DURATION=$BUILD_DURATION"
-echo "DISCORD_WEBHOOK_URL=$DISCORD_WEBHOOK_URL"
-
-# Calculate JAR size and SIZE string if possible
+# Calculate JAR size and human-readable size
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
   if (( JAR_SIZE < 1024 )); then
@@ -37,56 +26,43 @@ if [[ "$STATUS" == "build_failure" ]]; then
   COLOR=15158332
   TITLE="❌ Build Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS='{"name": "Error Log", "value": "```
-'"$BUILD_LOG"'```", "inline": false}'
+  EXTRA_FIELDS+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false}")
 elif [[ "$STATUS" == "upload_failure" ]]; then
   UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
   COLOR=15158332
   TITLE="❌ Upload Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS='{"name": "Error Log", "value": "```
-'"$UPLOAD_LOG"'```", "inline": false}'
+  EXTRA_FIELDS+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false}")
 elif [[ "$STATUS" == "upload_success" ]]; then
   COLOR=3447003
   TITLE="✅ Upload Successful"
   FOOTER="Upload Job via GitHub Actions"
-
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "From → To", "value": "`artifacts/` → `/plugins`", "inline": true}'
+    EXTRA_FIELDS+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
+    EXTRA_FIELDS+=("{\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true}")
   fi
 else
   COLOR=3066993
   TITLE="✅ Build Successful"
   FOOTER="Build Job via GitHub Actions"
-
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
-    EXTRA_FIELDS='{"name": "Jar & Size", "value": "`'"$JAR_NAME"'` ('"$SIZE"')", "inline": true}, {"name": "Build Duration", "value": "`'"$BUILD_DURATION"' s`", "inline": true}'
+    EXTRA_FIELDS+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}")
+    EXTRA_FIELDS+=("{\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true}")
   fi
 fi
 
 FIELDS_LIST=()
-
 FIELDS_LIST+=("{\"name\": \"Repository\", \"value\": \"[$REPO]($REPO_URL)\", \"inline\": true}")
 FIELDS_LIST+=("{\"name\": \"Branch\", \"value\": \"[$BRANCH]($BRANCH_URL)\", \"inline\": true}")
 FIELDS_LIST+=("{\"name\": \"Commit\", \"value\": \"[$GIT_HASH]($COMMIT_URL)\", \"inline\": true}")
 
-if [[ -n "$EXTRA_FIELDS" ]]; then
-  # Split EXTRA_FIELDS in case it contains multiple fields
-  IFS='},' read -ra ADDR <<< "$EXTRA_FIELDS"
-  for i in "${ADDR[@]}"; do
-    # Add back the closing } if it's missing
-    [[ $i != *"}" ]] && i="$i}"
-    # Remove leading comma and whitespace
-    i="${i#, }"
-    FIELDS_LIST+=("$i")
-  done
-fi
+for fld in "${EXTRA_FIELDS[@]}"; do
+  FIELDS_LIST+=("$fld")
+done
 
 FIELDS_LIST+=("{\"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }")
 
-FIELDS_ARRAY="["
-FIELDS_ARRAY+=$(IFS=, ; echo "${FIELDS_LIST[*]}")
-FIELDS_ARRAY+="]"
+FIELDS_ARRAY="[$(IFS=,; echo "${FIELDS_LIST[*]}")]"
 
 read -r -d '' PAYLOAD <<EOF
 {
@@ -105,4 +81,14 @@ read -r -d '' PAYLOAD <<EOF
 }
 EOF
 
-curl -s -w "%{http_code}" -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+echo "---- PAYLOAD ----"
+echo "$PAYLOAD"
+echo "-----------------"
+
+HTTP_RESPONSE=$(curl -s -w "%{http_code}" -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL")
+CURL_EXIT_CODE=$?
+echo "Curl exit code: $CURL_EXIT_CODE"
+echo "Curl HTTP response: $HTTP_RESPONSE"
+if [ $CURL_EXIT_CODE -ne 0 ] || [[ $HTTP_RESPONSE != 2* ]]; then
+  exit 1
+fi
