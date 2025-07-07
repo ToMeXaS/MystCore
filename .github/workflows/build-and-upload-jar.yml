@@ -46,6 +46,10 @@ jobs:
         id: end-time
         run: echo "end=$(date +%s)" >> $GITHUB_OUTPUT
 
+      - name: Calculate build duration
+        id: build-duration
+        run: echo "duration=$(( ${{ steps.end-time.outputs.end }} - ${{ steps.start-time.outputs.start }} ))" >> $GITHUB_OUTPUT
+
       - name: Get Jar file name
         id: get_jar
         run: |
@@ -64,7 +68,7 @@ jobs:
           branch: ${{ github.ref_name }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           jar_name: ${{ steps.get_jar.outputs.jar_name }}
-          build_duration: ${{ (steps.end-time.outputs.end - steps.start-time.outputs.start) | toString }}
+          build_duration: ${{ steps.build-duration.outputs.duration }}
 
       - name: Notify Failure
         if: failure()
