@@ -17,13 +17,13 @@ if [[ "$STATUS" == "build_failure" ]]; then
   COLOR=15158332
   TITLE="❌ Build Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false}"
+  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$BUILD_LOG\`\`\`\", \"inline\": false},"
 elif [[ "$STATUS" == "upload_failure" ]]; then
   UPLOAD_LOG=$(tail -n 20 upload.log 2>/dev/null || echo "No upload log found.")
   COLOR=15158332
   TITLE="❌ Upload Failed"
   FOOTER="Failed Job via GitHub Actions"
-  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false}"
+  EXTRA_FIELDS="{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false},"
 elif [[ "$STATUS" == "upload_success" ]]; then
   COLOR=3447003
   TITLE="✅ Upload Successful"
@@ -39,7 +39,7 @@ elif [[ "$STATUS" == "upload_success" ]]; then
       else
         SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
       fi
-      EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true}"
+      EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"From → To\", \"value\": \"\`artifacts/\` → \`/plugins\`\", \"inline\": true},"
     fi
   fi
 else
@@ -55,10 +55,9 @@ else
     else
       SIZE="\`$(echo "scale=2; $JAR_SIZE / 1024 / 1024" | bc) MB\`"
     fi
-    EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true}"
+    EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true},"
   fi
 fi
-
 read -r -d '' PAYLOAD <<EOF
 {
   "embeds": [{
@@ -74,7 +73,7 @@ read -r -d '' PAYLOAD <<EOF
       { "name": "Repository", "value": "[$REPO]($REPO_URL)", "inline": true },
       { "name": "Branch", "value": "[$BRANCH]($BRANCH_URL)", "inline": true },
       { "name": "Commit", "value": "[$GIT_HASH]($COMMIT_URL)", "inline": true },
-      $( [[ -n "$EXTRA_FIELDS" ]] && echo ", $EXTRA_FIELDS" )
+      $EXTRA_FIELDS
       { "name": " ", "value": "[[View Run Action]]($RUN_URL)", "inline": false }
 
     ],
