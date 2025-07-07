@@ -58,6 +58,24 @@ else
     EXTRA_FIELDS="{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME\` ($SIZE)\", \"inline\": true}, {\"name\": \"Build Duration\", \"value\": \"\`$BUILD_DURATION s\`\", \"inline\": true},"
   fi
 fi
+
+FIELDS=$(cat <<EOF
+{ "name": "Repository", "value": "[$REPO]($REPO_URL)", "inline": true },
+{ "name": "Branch", "value": "[$BRANCH]($BRANCH_URL)", "inline": true },
+{ "name": "Commit", "value": "[$GIT_HASH]($COMMIT_URL)", "inline": true }
+EOF
+)
+
+# If EXTRA_FIELDS is not empty, add a comma and append it
+if [[ -n "$EXTRA_FIELDS" ]]; then
+  FIELDS="$FIELDS,
+$EXTRA_FIELDS"
+fi
+
+# Always add the final field
+FIELDS="$FIELDS,
+{ \"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }"
+
 read -r -d '' PAYLOAD <<EOF
 {
   "embeds": [{
@@ -70,12 +88,7 @@ read -r -d '' PAYLOAD <<EOF
       "icon_url": "https://github.com/$AUTHOR.png"
     },
     "fields": [
-      { "name": "Repository", "value": "[$REPO]($REPO_URL)", "inline": true },
-      { "name": "Branch", "value": "[$BRANCH]($BRANCH_URL)", "inline": true },
-      { "name": "Commit", "value": "[$GIT_HASH]($COMMIT_URL)", "inline": true },
-      $EXTRA_FIELDS
-      { "name": " ", "value": "[[View Run Action]]($RUN_URL)", "inline": false }
-
+      $FIELDS
     ],
     "footer": { "text": "$FOOTER" }
   }]
