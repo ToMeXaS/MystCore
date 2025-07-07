@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
@@ -8,6 +9,17 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 SIZE=""
 EXTRA_FIELDS=""
+
+# Print all vars for debug
+echo "REPO=$REPO"
+echo "GIT_HASH=$GIT_HASH"
+echo "BRANCH=$BRANCH"
+echo "JAR_NAME=$JAR_NAME"
+echo "STATUS=$STATUS"
+echo "AUTHOR=$AUTHOR"
+echo "RUN_URL=$RUN_URL"
+echo "BUILD_DURATION=$BUILD_DURATION"
+echo "DISCORD_WEBHOOK_URL=$DISCORD_WEBHOOK_URL"
 
 # Calculate JAR size and SIZE string if possible
 if [[ -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
@@ -86,4 +98,12 @@ read -r -d '' PAYLOAD <<EOF
 }
 EOF
 
+echo "Payload to Discord:"
+echo "$PAYLOAD"
+
 curl -s -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+CURL_EXIT_CODE=$?
+if [ $CURL_EXIT_CODE -ne 0 ]; then
+  echo "curl failed with exit code $CURL_EXIT_CODE"
+  exit 1
+fi

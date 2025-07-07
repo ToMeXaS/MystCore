@@ -92,7 +92,7 @@ jobs:
 
       - name: Upload JAR to SFTP (with log)
         run: |
-          sudo apt-get update && sudo apt-get install -y sshpass
+          #sudo apt-get update && sudo apt-get install -y sshpass
           set -o pipefail
           sshpass -p "$SFTP_PASS" sftp -v -P $SFTP_PORT $SFTP_USER@$SFTP_HOST <<EOF
           put artifacts/${{ steps.get_jar.outputs.jar_name }} /plugins
