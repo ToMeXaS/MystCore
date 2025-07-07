@@ -51,7 +51,7 @@ json=$(jq -n \
       { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
       { name: "Changed Files", value: $changed, inline: false },
       { name: "Message", value: "```\($commit_message)```", inline: false },
-      { name: " ", value: "[[View Commit]](" + $commit_url + ")", inline: false }
+      { name: " ", value: "[[View Commit]](\($commit_url))", inline: false }
     ],
     footer: { text: "Commit detected by GitHub Actions" }
   }]
