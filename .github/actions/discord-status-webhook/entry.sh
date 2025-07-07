@@ -47,7 +47,7 @@ elif [[ "$STATUS" == "upload_failure" ]]; then
   FIELDS_LIST+=("{\"name\": \"Error Log\", \"value\": \"\`\`\`$UPLOAD_LOG\`\`\`\", \"inline\": false}")
 elif [[ "$STATUS" == "upload_success" ]]; then
   COLOR=3447003
-  TITLE="✅ Upload Successful"
+  TITLE="📤 Upload Successful"
   FOOTER="Upload Job via GitHub Actions"
   if [[ "$JAR_SIZE" != "unknown" && -n "$SIZE" ]]; then
     FIELDS_LIST+=("{\"name\": \"Jar & Size\", \"value\": \"\`$JAR_NAME ($SIZE)\`\", \"inline\": true}")
