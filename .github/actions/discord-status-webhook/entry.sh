@@ -72,14 +72,12 @@ FIELDS='
 '
 
 # Build the fields array safely
-FIELDS_ARRAY="["
-FIELDS_ARRAY+=$FIELDS
-
+FIELDS_ARRAY="$FIELDS"
 if [[ -n "$EXTRA_FIELDS" ]]; then
-  FIELDS_ARRAY+=","$EXTRA_FIELDS
+  FIELDS_ARRAY="$FIELDS_ARRAY, $EXTRA_FIELDS"
 fi
-
-FIELDS_ARRAY+=',{"name": " ", "value": "[[View Run Action]]('"$RUN_URL"')", "inline": false}]'
+FIELDS_ARRAY="$FIELDS_ARRAY, {\"name\": \" \", \"value\": \"[[View Run Action]]($RUN_URL)\", \"inline\": false }"
+FIELDS_ARRAY="[$FIELDS_ARRAY]"
 
 read -r -d '' PAYLOAD <<EOF
 {
@@ -101,9 +99,10 @@ EOF
 echo "Payload to Discord:"
 echo "$PAYLOAD"
 
-curl -s -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
+HTTP_RESPONSE=$(curl -s -w "%{http_code}" -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL")
 CURL_EXIT_CODE=$?
-if [ $CURL_EXIT_CODE -ne 0 ]; then
-  echo "curl failed with exit code $CURL_EXIT_CODE"
+echo "Curl exit code: $CURL_EXIT_CODE"
+echo "Curl HTTP response: $HTTP_RESPONSE"
+if [ $CURL_EXIT_CODE -ne 0 ] || [[ $HTTP_RESPONSE != 2* ]]; then
   exit 1
 fi
