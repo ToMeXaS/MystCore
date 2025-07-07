@@ -12,7 +12,7 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 SIZE=""
 
-for var in status webhook git_hash username repo branch run_url jar_name build_duration; do
+for var in STATUS WEBHOOK GIT_HASH USERNAME REPO BRANCH RUN_URL JAR_NAME BUILD_DURATION; do
   echo "$var=${!var}"
 done
 
