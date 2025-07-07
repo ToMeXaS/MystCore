@@ -36,14 +36,14 @@ jobs:
       - run: chmod +x ./gradlew
 
       - name: Record start time
-        id: start_time
+        id: start-time
         run: echo "START_TIME=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Build with Gradle
         run: ./gradlew build || tee build/reports/build.log
 
       - name: Record end time
-        id: end_time
+        id: end-time
         run: echo "END_TIME=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Get Jar file name
@@ -64,7 +64,7 @@ jobs:
           branch: ${{ github.ref_name }}
           run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           jar_name: ${{ steps.get_jar.outputs.jar_name }}
-          build_duration: ${{ (steps.end_time.outputs.END_TIME - steps.start_time.outputs.START_TIME) | toString }}
+          build_duration: ${{ (steps.end-time.outputs.END_TIME - steps.start-time.outputs.START_TIME) | toString }}
 
       - name: Notify Failure
         if: failure()
