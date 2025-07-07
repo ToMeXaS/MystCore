@@ -38,7 +38,7 @@ runs:
         STATUS: ${{ inputs.status }}
         DISCORD_WEBHOOK_URL: ${{ inputs.webhook }}
         GIT_HASH: ${{ inputs.git_hash }}
-        AUTHOR: ${{ inputs.author }}
+        AUTHOR: ${{ inputs.username }}
         REPO: ${{ inputs.repo }}
         BRANCH: ${{ inputs.branch }}
         RUN_URL: ${{ inputs.run_url }}
