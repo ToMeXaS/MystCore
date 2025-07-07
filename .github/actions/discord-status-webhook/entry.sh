@@ -80,6 +80,15 @@ read -r -d '' PAYLOAD <<EOF
 }
 EOF
 
+echo "AUTHOR=$AUTHOR"
+echo "BUILD_DURATION=$BUILD_DURATION"
+echo "RUN_URL=$RUN_URL"
+echo "TITLE=$TITLE"
+echo "COLOR=$COLOR"
+echo "TIMESTAMP=$TIMESTAMP"
+echo "FOOTER=$FOOTER"
+
+
 echo "---- PAYLOAD ----"
 echo "$PAYLOAD"
 echo "-----------------"
