@@ -8,14 +8,6 @@ BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 JAR_SIZE="unknown"
 EXTRA_FIELDS=""
 
-# Ensure BUILD_DURATION defined for build success
-if [[ "$STATUS" == "build_success" && -z "$BUILD_DURATION" ]]; then
-  BUILD_DURATION="0"
-fi
-
-# Validate JSON before sending
-echo "$PAYLOAD" | jq . || { echo "Invalid JSON payload"; exit 1; }
-
 if [[ ("$STATUS" == "build_success" || "$STATUS" == "upload_success") && -n "$JAR_NAME" && -f "artifacts/$JAR_NAME" ]]; then
   JAR_SIZE=$(stat -c%s "artifacts/$JAR_NAME")
 fi
@@ -89,5 +81,8 @@ read -r -d '' PAYLOAD <<EOF
   }]
 }
 EOF
+
+# Validate JSON before sending
+echo "$PAYLOAD" | jq . || { echo "Invalid JSON payload"; exit 1; }
 
 curl -s -H "Content-Type: application/json" -X POST -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
