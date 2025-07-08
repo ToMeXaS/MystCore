@@ -57,7 +57,7 @@ if ! json=$(jq -n \
   --arg branch_url "$BRANCH_URL" \
   --arg commit "$GIT_HASH" \
   --arg commit_url "$COMMIT_URL" \
-  --arg commit_message "```$COMMIT_MESSAGE```" \
+  --arg commit_message "$COMMIT_MESSAGE" \
   --arg author "$AUTHOR" \
   --arg timestamp "$TIMESTAMP" \
   --arg changed "$CHANGED_FILES_LIST" \
@@ -76,7 +76,7 @@ if ! json=$(jq -n \
         { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
         { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
         { name: "Changed Files", value: $changed, inline: false },
-        { name: "Message", value: $commit_message, inline: false },
+        { name: "Message", value: "```\($commit_message)```", inline: false },
         { name: " ", value: "[[View Commit]](\($commit_url))", inline: false }
       ],
       footer: { text: "Commit detected by GitHub Actions" }
