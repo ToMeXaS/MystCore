@@ -1,11 +1,28 @@
 #!/usr/bin/env bash
 set -e
+set -x
+
+: "${REPO:?REPO not set}"
+: "${GIT_HASH:?GIT_HASH not set}"
+: "${AUTHOR:?AUTHOR not set}"
+: "${BRANCH:?BRANCH not set}"
+: "${DISCORD_WEBHOOK_URL:?DISCORD_WEBHOOK_URL not set}"
+
+command -v jq >/dev/null 2>&1 || { echo "jq not installed"; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo "curl not installed"; exit 1; }
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
 COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+
+echo "REPO: $REPO"
+echo "GIT_HASH: $GIT_HASH"
+echo "AUTHOR: $AUTHOR"
+echo "BRANCH: $BRANCH"
+echo "DISCORD_WEBHOOK_URL: $DISCORD_WEBHOOK_URL"
+echo "COMMIT_MESSAGE: $COMMIT_MESSAGE"
 
 CHANGED_FILES_LIST=""
 file_count=0
