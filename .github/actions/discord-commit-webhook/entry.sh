@@ -37,42 +37,48 @@ if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
 fi
 
-json=$(jq -n \
---arg title "📦 New Commit Pushed" \
---arg repo "$REPO" \
---arg repo_url "$REPO_URL" \
---arg branch "$BRANCH" \
---arg branch_url "$BRANCH_URL" \
---arg commit "$GIT_HASH" \
---arg commit_url "$COMMIT_URL" \
---arg commit_message "$COMMIT_MESSAGE" \
---arg author "$AUTHOR" \
---arg timestamp "$TIMESTAMP" \
---arg changed "$CHANGED_FILES_LIST" \
---arg compare_url "$COMPARE_URL" \
-'{
-  embeds: [{
-    title: $title,
-    color: 3447003,
-    timestamp: $timestamp,
-    author: {
-      name: $author,
-      url: "https://github.com/\($author)",
-      icon_url: "https://github.com/\($author).png"
-    },
-    fields: [
-      { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
-      { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
-      { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
-      { name: "Changed Files", value: $changed, inline: false },
-      { name: "Message", value: "```\($commit_message)```", inline: false },
-      { name: " ", value: "[[View Commit]](\($commit_url))", inline: false }
-    ],
-    footer: { text: "Commit detected by GitHub Actions" }
-  }]
-}')
+if ! json=$(jq -n \
+  --arg title "📦 New Commit Pushed" \
+  --arg repo "$REPO" \
+  --arg repo_url "$REPO_URL" \
+  --arg branch "$BRANCH" \
+  --arg branch_url "$BRANCH_URL" \
+  --arg commit "$GIT_HASH" \
+  --arg commit_url "$COMMIT_URL" \
+  --arg commit_message "$COMMIT_MESSAGE" \
+  --arg author "$AUTHOR" \
+  --arg timestamp "$TIMESTAMP" \
+  --arg changed "$CHANGED_FILES_LIST" \
+  --arg compare_url "$COMPARE_URL" \
+  '{
+    embeds: [{
+      title: $title,
+      color: 3447003,
+      timestamp: $timestamp,
+      author: {
+        name: $author,
+        url: "https://github.com/\($author)",
+        icon_url: "https://github.com/\($author).png"
+      },
+      fields: [
+        { name: "Repository", value: "[\($repo)](\($repo_url))", inline: true },
+        { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
+        { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
+        { name: "Changed Files", value: $changed, inline: false },
+        { name: "Message", value: "```\($commit_message)```", inline: false },
+        { name: " ", value: "[[View Commit]](\($commit_url))", inline: false }
+      ],
+      footer: { text: "Commit detected by GitHub Actions" }
+    }]
+  }'
+); then
+  echo "jq failed to generate JSON payload" >&2
+  exit 1
+fi
 
-echo "$json"  # For debugging
+echo "::group::JSON Payload"
+echo "$json"
+echo "::endgroup::"
 
 curl_response=$(curl -s -w "%{http_code}" -o /tmp/curl_output -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL")
 cat /tmp/curl_output
