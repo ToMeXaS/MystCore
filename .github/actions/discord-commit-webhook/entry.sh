@@ -7,8 +7,6 @@ COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 CHANGED_FILES=($(git diff --name-only "$GIT_HASH^" "$GIT_HASH"))
-PREV_HASH=$(git rev-parse "$GIT_HASH^")
-COMPARE_URL="https://github.com/$REPO/compare/$PREV_HASH..$GIT_HASH"
 
 MAX_LENGTH=900
 CHANGED_FILES_LIST=""
@@ -22,8 +20,7 @@ for f in "${CHANGED_FILES[@]}"; do
   line="- [$fname]($url)\n"
   new_length=$((current_length + ${#line}))
   if (( new_length > MAX_LENGTH )) || ((file_count >= max_files)); then
-    CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown.
-  [View all changes](https://github.com/$REPO/compare/$PREV_HASH..$GIT_HASH)"
+    CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown."
     break
   fi
 
