@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -e
-set -x
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
