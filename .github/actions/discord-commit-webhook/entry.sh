@@ -22,9 +22,11 @@ for f in "${CHANGED_FILES[@]}"; do
   line="- [$fname]($url)\n"
   new_length=$((current_length + ${#line}))
   if (( new_length > MAX_LENGTH )) || ((file_count >= max_files)); then
-    CHANGED_FILES_LIST="${CHANGED_FILES_LIST}\\...and more files not shown.\\n[View all changes](https://github.com/$REPO/compare/$PREV_HASH..$GIT_HASH)"
+    CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown.
+  [View all changes](https://github.com/$REPO/compare/$PREV_HASH..$GIT_HASH)"
     break
   fi
+
   CHANGED_FILES_LIST="${CHANGED_FILES_LIST}${line}"
   current_length=$new_length
   ((file_count++))
