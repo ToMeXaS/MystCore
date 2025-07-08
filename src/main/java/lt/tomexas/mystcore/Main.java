@@ -7,6 +7,7 @@ import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
 import lombok.Getter;
 import lt.tomexas.mystcore.listeners.*;
 import lt.tomexas.mystcore.playerfontimage.PlayerFontImage;
+import lt.tomexas.mystcore.playerfontimage.impl.MinotarSource;
 import lt.tomexas.mystcore.submodules.resources.ResourcesMain;
 import lt.tomexas.mystcore.submodules.resources.listeners.BaseEntityInteractListener;
 import lt.tomexas.mystcore.submodules.resources.ResourcesDatabase;
@@ -14,6 +15,7 @@ import lt.tomexas.mystcore.submodules.resources.listeners.PlayerInteractListener
 import lt.tomexas.mystcore.submodules.resources.commands.MystResourcesCommand;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import lt.tomexas.mystcore.submodules.worldguard.flags.DenyEntryFlag;
+import lt.tomexas.mystcore.submodules.worldguard.listeners.PlayerAreaEnterListener;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -125,11 +127,17 @@ public final class Main extends JavaPlugin {
     }
 
     private void initializePlayers() {
-        database.getAllPlayerHeads().forEach((uuid, playerHead) -> {
+        /*database.getAllPlayerHeads().forEach((uuid, playerHead) -> {
             OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-            PlayerData playerData = PlayerData.get(player.getUniqueId());
-            new MystPlayer(player, playerData, playerHead, null);
-        });
+            new MystPlayer(player, PlayerData.get(uuid), playerHead, null);
+        });*/
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (!MystPlayer.hasMystPlayer(player)) {
+                PlayerData playerData = PlayerData.get(player.getUniqueId());
+                new MystPlayer(player, playerData, null);
+            }
+        }
     }
 
     private void startPlayerTask() {

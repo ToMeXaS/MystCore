@@ -16,8 +16,8 @@ public class MystPlayer {
     private final OfflinePlayer player;
     @Getter
     private PlayerData playerData;
-    @Getter
-    private final String playerFontImage;
+    //@Getter
+    //private final String playerFontImage;
     @Setter
     @Getter
     private List<OfflinePlayer> islandMembers;
@@ -25,10 +25,9 @@ public class MystPlayer {
     @Getter
     private boolean jumping;
 
-    public MystPlayer(@NotNull OfflinePlayer player, @NotNull PlayerData playerData, @NotNull String playerFontImage, @Nullable List<OfflinePlayer> islandMembers) {
+    public MystPlayer(@NotNull OfflinePlayer player, @NotNull PlayerData playerData, @Nullable List<OfflinePlayer> islandMembers) {
         this.player = player;
         this.playerData = playerData;
-        this.playerFontImage = playerFontImage;
         this.islandMembers = islandMembers;
         REGISTRY.put(player.getUniqueId(), this);
     }

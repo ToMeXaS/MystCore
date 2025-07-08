@@ -18,16 +18,16 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        String playerHead;
+        //String playerHead;
         if (!database.playerExists(player)) {
             database.addPlayer(player);
-            playerHead = plugin.getPlayerFontImage().getHeadAsString(player.getUniqueId(), true, new MinotarSource(true));
+            //playerHead = plugin.getPlayerFontImage().getHeadAsString(player.getUniqueId(), true, new MinotarSource(true));
         } else {
             database.updatePlayer(player);
-            playerHead = database.getPlayerHead(player);
+            //playerHead = database.getPlayerHead(player);
         }
 
         PlayerData playerData = PlayerData.get(player.getUniqueId());
-        new MystPlayer(player, playerData, playerHead, null);
+        new MystPlayer(player, playerData, null);
     }
 }

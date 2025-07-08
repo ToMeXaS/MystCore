@@ -34,11 +34,11 @@ public class Placeholders extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, String params) {
-        if (params.equalsIgnoreCase("player_head")) {
+        /*if (params.equalsIgnoreCase("player_head")) {
             MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
             if (mystPlayer == null) return "No player found";
             return mystPlayer.getPlayerFontImage();
-        }
+        }*/
 
         if (params.equalsIgnoreCase("is_player_freezing")) {
             if(player.getPlayer() == null) return "No player found";
