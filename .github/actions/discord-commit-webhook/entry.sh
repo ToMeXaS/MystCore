@@ -11,7 +11,6 @@ COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 COMPARE_URL="https://github.com/$REPO/compare/$BRANCH"
-CHANGED_FILES="$(git diff --name-only "$GIT_HASH"^ "$GIT_HASH" || echo "")"
 
 MAX_LENGTH=900
 CHANGED_FILES_LIST=""
@@ -19,7 +18,13 @@ current_length=0
 file_count=0
 max_files=5
 
-for f in "${CHANGED_FILES[@]}"; do
+CHANGED_FILES_LIST=""
+file_count=0
+current_length=0
+max_files=5
+MAX_LENGTH=900
+
+while IFS= read -r f; do
   [ -z "$f" ] && continue
   fname=$(basename "$f")
   url="https://github.com/$REPO/blob/$GIT_HASH/$f"
@@ -32,7 +37,7 @@ for f in "${CHANGED_FILES[@]}"; do
   CHANGED_FILES_LIST="${CHANGED_FILES_LIST}${line}"
   current_length=$new_length
   ((file_count++))
-done
+done < <(git diff --name-only "$GIT_HASH"^ "$GIT_HASH")
 
 if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
