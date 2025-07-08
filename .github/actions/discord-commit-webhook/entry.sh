@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set +e
-set -x
 
 : "${REPO:?REPO not set}"
 : "${GIT_HASH:?GIT_HASH not set}"
@@ -34,7 +33,8 @@ while IFS= read -r f; do
   [ -z "$f" ] && continue
   fname=$(basename "$f")
   url="https://github.com/$REPO/blob/$GIT_HASH/$f"
-  line="- [$fname]($url)\\n"
+  line="- [$fname]($url)
+  "
   new_length=$((current_length + ${#line}))
   if (( new_length > MAX_LENGTH )) || ((file_count >= max_files)); then
     CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown."
@@ -57,7 +57,7 @@ if ! json=$(jq -n \
   --arg branch_url "$BRANCH_URL" \
   --arg commit "$GIT_HASH" \
   --arg commit_url "$COMMIT_URL" \
-  --arg commit_message "$COMMIT_MESSAGE" \
+  --arg commit_message "```$COMMIT_MESSAGE```" \
   --arg author "$AUTHOR" \
   --arg timestamp "$TIMESTAMP" \
   --arg changed "$CHANGED_FILES_LIST" \
