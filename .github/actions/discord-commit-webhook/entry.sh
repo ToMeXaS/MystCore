@@ -1,20 +1,33 @@
 #!/usr/bin/env bash
 set -e
+set -x
+
+: "${REPO:?REPO not set}"
+: "${GIT_HASH:?GIT_HASH not set}"
+: "${AUTHOR:?AUTHOR not set}"
+: "${BRANCH:?BRANCH not set}"
+: "${DISCORD_WEBHOOK_URL:?DISCORD_WEBHOOK_URL not set}"
+
+command -v jq >/dev/null 2>&1 || { echo "jq is required but not installed"; exit 1; }
+command -v curl >/dev/null 2>&1 || { echo "curl is required but not installed"; exit 1; }
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
 COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-CHANGED_FILES=($(git diff --name-only "$GIT_HASH^" "$GIT_HASH"))
+COMPARE_URL="https://github.com/$REPO/compare/$BRANCH"
 
-MAX_LENGTH=800
+mapfile -t CHANGED_FILES < <(git diff --name-only "$GIT_HASH^" "$GIT_HASH")
+
+MAX_LENGTH=900
 CHANGED_FILES_LIST=""
 current_length=0
 file_count=0
-max_files=5 # Optional: Add a hard file count limit if you want
+max_files=5
 
 for f in "${CHANGED_FILES[@]}"; do
+  [ -z "$f" ] && continue
   fname=$(basename "$f")
   url="https://github.com/$REPO/blob/$GIT_HASH/$f"
   line="- [$fname]($url)\n"
@@ -23,7 +36,6 @@ for f in "${CHANGED_FILES[@]}"; do
     CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown."
     break
   fi
-
   CHANGED_FILES_LIST="${CHANGED_FILES_LIST}${line}"
   current_length=$new_length
   ((file_count++))
