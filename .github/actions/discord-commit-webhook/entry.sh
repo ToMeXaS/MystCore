@@ -5,6 +5,14 @@ set -x
 command -v jq >/dev/null 2>&1 || { echo "jq is required but not installed"; exit 1; }
 command -v curl >/dev/null 2>&1 || { echo "curl is required but not installed"; exit 1; }
 
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
+COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
+REPO_URL="https://github.com/$REPO"
+BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
+COMPARE_URL="https://github.com/$REPO/compare/$BRANCH"
+CHANGED_FILES="$(git diff --name-only "$GIT_HASH"^ "$GIT_HASH" || echo "")"
+
 MAX_LENGTH=900
 CHANGED_FILES_LIST=""
 current_length=0
