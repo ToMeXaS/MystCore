@@ -80,4 +80,11 @@ json=$(jq -n \
   }]
 }')
 
-curl -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL"
+echo "$json"  # For debugging
+
+curl_response=$(curl -s -w "%{http_code}" -o /tmp/curl_output -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL")
+cat /tmp/curl_output
+if [[ "$curl_response" != "204" ]]; then
+  echo "Discord webhook failed with HTTP status $curl_response"
+  exit 1
+fi
