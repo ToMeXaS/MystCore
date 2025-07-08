@@ -7,7 +7,6 @@ COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
 COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
 REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
-COMPARE_URL="https://github.com/$REPO/compare/$BRANCH"
 
 CHANGED_FILES_LIST=""
 file_count=0
@@ -34,10 +33,6 @@ if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
 fi
 
-# Safely wrap commit message in triple backticks for Discord, escaping any existing backticks
-ESCAPED_COMMIT_MESSAGE=$(printf "%s" "$COMMIT_MESSAGE" | sed 's/```/```/g') # breaks up 3-backtick sequences
-FORMATTED_COMMIT_MESSAGE="```${ESCAPED_COMMIT_MESSAGE}```"
-
 if ! json=$(jq -n \
   --arg title "📦 New Commit Pushed" \
   --arg repo "$REPO" \
@@ -46,7 +41,7 @@ if ! json=$(jq -n \
   --arg branch_url "$BRANCH_URL" \
   --arg commit "$GIT_HASH" \
   --arg commit_url "$COMMIT_URL" \
-  --arg commit_message "$FORMATTED_COMMIT_MESSAGE" \
+  --arg commit_message "$COMMIT_MESSAGE" \
   --arg author "$AUTHOR" \
   --arg timestamp "$TIMESTAMP" \
   --arg changed "$CHANGED_FILES_LIST" \
