@@ -50,7 +50,6 @@ if ! json=$(jq -n \
   --arg author "$AUTHOR" \
   --arg timestamp "$TIMESTAMP" \
   --arg changed "$CHANGED_FILES_LIST" \
-  --arg compare_url "$COMPARE_URL" \
   '{
     embeds: [{
       title: $title,
