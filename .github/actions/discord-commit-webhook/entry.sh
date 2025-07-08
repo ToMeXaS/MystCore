@@ -49,7 +49,8 @@ if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
 fi
 
-if ! json=$(jq -n \
+jq_cmd=$(cat <<'EOF'
+jq -n \
   --arg title "📦 New Commit Pushed" \
   --arg repo "$REPO" \
   --arg repo_url "$REPO_URL" \
@@ -82,14 +83,18 @@ if ! json=$(jq -n \
       footer: { text: "Commit detected by GitHub Actions" }
     }]
   }'
-); then
+EOF
+)
+
+echo "::group::About to run jq"
+echo "$jq_cmd"
+echo "::endgroup::"
+
+if ! json=$(eval "$jq_cmd" 2>jq_error.log); then
   echo "jq failed to generate JSON payload" >&2
+  cat jq_error.log >&2
   exit 1
 fi
-
-echo "::group::Generated JSON"
-echo "$json"
-echo "::endgroup::"
 
 response=$(curl -s -w "%{http_code}" -o /tmp/curl_output -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL")
 cat /tmp/curl_output
