@@ -12,12 +12,6 @@ REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 COMPARE_URL="https://github.com/$REPO/compare/$BRANCH"
 
-MAX_LENGTH=900
-CHANGED_FILES_LIST=""
-current_length=0
-file_count=0
-max_files=5
-
 CHANGED_FILES_LIST=""
 file_count=0
 current_length=0
