@@ -8,7 +8,7 @@ REPO_URL="https://github.com/$REPO"
 BRANCH_URL="https://github.com/$REPO/tree/$BRANCH"
 CHANGED_FILES=($(git diff --name-only "$GIT_HASH^" "$GIT_HASH"))
 
-MAX_LENGTH=900
+MAX_LENGTH=800
 CHANGED_FILES_LIST=""
 current_length=0
 file_count=0
