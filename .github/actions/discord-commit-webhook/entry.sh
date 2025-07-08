@@ -34,7 +34,10 @@ if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
 fi
 
-# Generate the JSON payload with error checking
+# Safely wrap commit message in triple backticks for Discord, escaping any existing backticks
+ESCAPED_COMMIT_MESSAGE=$(printf "%s" "$COMMIT_MESSAGE" | sed 's/```/`​`​`/g') # breaks up 3-backtick sequences
+FORMATTED_COMMIT_MESSAGE="```${ESCAPED_COMMIT_MESSAGE}```"
+
 if ! json=$(jq -n \
   --arg title "📦 New Commit Pushed" \
   --arg repo "$REPO" \
@@ -43,7 +46,7 @@ if ! json=$(jq -n \
   --arg branch_url "$BRANCH_URL" \
   --arg commit "$GIT_HASH" \
   --arg commit_url "$COMMIT_URL" \
-  --arg commit_message "$COMMIT_MESSAGE" \
+  --arg commit_message "$FORMATTED_COMMIT_MESSAGE" \
   --arg author "$AUTHOR" \
   --arg timestamp "$TIMESTAMP" \
   --arg changed "$CHANGED_FILES_LIST" \
@@ -74,12 +77,10 @@ if ! json=$(jq -n \
   exit 1
 fi
 
-# Output the JSON for debugging
 echo "::group::Generated JSON"
 echo "$json"
 echo "::endgroup::"
 
-# Send to Discord and print the response
 response=$(curl -s -w "%{http_code}" -o /tmp/curl_output -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL")
 cat /tmp/curl_output
 echo "Discord webhook HTTP status: $response"
