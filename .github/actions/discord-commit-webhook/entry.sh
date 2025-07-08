@@ -2,9 +2,6 @@
 set -e
 set -x
 
-command -v jq >/dev/null 2>&1 || { echo "jq is required but not installed"; exit 1; }
-command -v curl >/dev/null 2>&1 || { echo "curl is required but not installed"; exit 1; }
-
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 COMMIT_URL="https://github.com/$REPO/commit/$GIT_HASH"
 COMMIT_MESSAGE="$(git log -1 --pretty=format:%B || echo "No commit message")"
@@ -37,6 +34,7 @@ if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
 fi
 
+# Generate the JSON payload with error checking
 if ! json=$(jq -n \
   --arg title "📦 New Commit Pushed" \
   --arg repo "$REPO" \
@@ -65,7 +63,7 @@ if ! json=$(jq -n \
         { name: "Branch", value: "[\($branch)](\($branch_url))", inline: true },
         { name: "Commit", value: "[\($commit)](\($commit_url))", inline: true },
         { name: "Changed Files", value: $changed, inline: false },
-        { name: "Message", value: "```\($commit_message)```", inline: false },
+        { name: "Message", value: $commit_message, inline: false },
         { name: " ", value: "[[View Commit]](\($commit_url))", inline: false }
       ],
       footer: { text: "Commit detected by GitHub Actions" }
@@ -76,13 +74,17 @@ if ! json=$(jq -n \
   exit 1
 fi
 
-echo "::group::JSON Payload"
+# Output the JSON for debugging
+echo "::group::Generated JSON"
 echo "$json"
 echo "::endgroup::"
 
-curl_response=$(curl -s -w "%{http_code}" -o /tmp/curl_output -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL")
+# Send to Discord and print the response
+response=$(curl -s -w "%{http_code}" -o /tmp/curl_output -H "Content-Type: application/json" -X POST -d "$json" "$DISCORD_WEBHOOK_URL")
 cat /tmp/curl_output
-if [[ "$curl_response" != "204" ]]; then
-  echo "Discord webhook failed with HTTP status $curl_response"
+echo "Discord webhook HTTP status: $response"
+
+if [[ "$response" != "204" ]]; then
+  echo "Discord webhook failed with HTTP status $response"
   exit 1
 fi
