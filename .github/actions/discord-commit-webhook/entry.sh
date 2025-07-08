@@ -30,7 +30,7 @@ for f in "${CHANGED_FILES[@]}"; do
   [ -z "$f" ] && continue
   fname=$(basename "$f")
   url="https://github.com/$REPO/blob/$GIT_HASH/$f"
-  line="- [$fname]($url)\n"
+  line="- [$fname]($url)"
   new_length=$((current_length + ${#line}))
   if (( new_length > MAX_LENGTH )) || ((file_count >= max_files)); then
     CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown."
