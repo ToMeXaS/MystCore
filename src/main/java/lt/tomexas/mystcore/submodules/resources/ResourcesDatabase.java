@@ -16,40 +16,46 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.TextDisplay;
 import org.bukkit.inventory.ItemStack;
 
+import java.io.File;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class ResourcesDatabase {
 
-    private static final String DB_URL = "jdbc:sqlite:"; // Database URL prefix
-    private static final String DB_NAME = "resources.db"; // Database name
-    private static final String DB_TABLE = "trees"; // Table name
+    private static final String DB_NAME = "resources.db";
+    private static final String DB_TABLE = "trees";
+    private final Connection connection;
 
-    // Database connection
-    private static Connection connection;
-
-    public ResourcesDatabase(String path) throws SQLException {
-        connection = DriverManager.getConnection(DB_URL + path + "/" + DB_NAME);
+    public ResourcesDatabase() throws SQLException {
+        File dataFolder = Main.getInstance().getDataFolder();
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs(); // Create plugin data folder if it doesn't exist
+        }
+        String dbPath = new File(dataFolder, DB_NAME).getAbsolutePath();
+        connection = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
 
         try (Statement statement = connection.createStatement()) {
             statement.execute("""
                 CREATE TABLE IF NOT EXISTS
                 """ + DB_TABLE + """
-                (uuid TEXT PRIMARY KEY,
-                textEntityId TEXT NOT NULL,
-                healthEntityId TEXT,
-                location TEXT NOT NULL,
-                barrierBlocks TEXT NOT NULL,
-                modelId TEXT NOT NULL,
-                respawnTime INTEGER NOT NULL,
-                glowChance INTEGER NOT NULL,
-                skillType TEXT NOT NULL,
-                skillData TEXT NOT NULL,
-                axes TEXT NOT NULL,
-                drops TEXT NOT NULL)
+                (
+                    uuid TEXT PRIMARY KEY,
+                    textEntityId TEXT NOT NULL,
+                    healthEntityId TEXT,
+                    location TEXT NOT NULL,
+                    barrierBlocks TEXT NOT NULL,
+                    modelId TEXT NOT NULL,
+                    respawnTime INTEGER NOT NULL,
+                    glowChance INTEGER NOT NULL,
+                    skillType TEXT NOT NULL,
+                    skillData TEXT NOT NULL,
+                    axes TEXT NOT NULL,
+                    drops TEXT NOT NULL
+                )
             """);
         }
     }
@@ -90,10 +96,10 @@ public class ResourcesDatabase {
                 }
 
                 String healthEntityId = "";
-                if (tree.getHealthEntityId() != null) healthEntityId = tree.getHealthEntityId().toString();
+                if (tree.getHealthDisplay() != null) healthEntityId = tree.getHealthDisplay().getUniqueId().toString();
 
                 preparedStatement.setString(1, uuid.toString());
-                preparedStatement.setString(2, tree.getTextEntityId().toString());
+                preparedStatement.setString(2, tree.getTextDisplay().getUniqueId().toString());
                 preparedStatement.setString(3, healthEntityId);
                 preparedStatement.setString(4, serializeLocation(tree.getLocation()));
                 preparedStatement.setString(5, serializeBlocks(tree.getBarrierBlocks()));
@@ -179,21 +185,29 @@ public class ResourcesDatabase {
                     PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid drops.");
                     continue;
                 }
-                BaseEntity<?> entity = ModelEngineAPI.getModeledEntity(uuid).getBase();
-                if (!(entity instanceof Dummy<?> dummy)) {
+                BaseEntity<?> baseEntity = ModelEngineAPI.getModeledEntity(uuid).getBase();
+                if (!(baseEntity instanceof Dummy<?> dummy)) {
                     PluginLogger.debug("Skipping tree with UUID " + uuid + " due to missing entity.");
                     continue;
                 }
-                if (dummy.isGlowing()) dummy.setGlowing(false);
-                stopFallingAnimation(uuid, modelId);
+                Entity textEntity = location.getWorld().getEntity(textEntityId);
+                if (!(textEntity instanceof TextDisplay textDisplay)) {
+                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to missing text display entity.");
+                    continue;
+                }
                 if (healthEntityId != null) {
                     Entity healthEntity = location.getWorld().getEntity(healthEntityId);
-                    if (healthEntity != null)
-                        healthEntity.remove();
+                    if (healthEntity instanceof TextDisplay healthDisplay) {
+                        healthDisplay.remove();
+                    }
+
                 }
 
+                if (dummy.isGlowing()) dummy.setGlowing(false);
+                stopFallingAnimation(uuid, modelId);
+
                 new Tree(uuid,
-                        textEntityId,
+                        textDisplay,
                         location,
                         barrierBlocks,
                         modelId,
@@ -319,7 +333,7 @@ public class ResourcesDatabase {
                 .collect(Collectors.joining(";")); // Join serialized strings with a semicolon
     }
 
-    public static List<ItemStack> deserializeItemStackList(String serializedDrops) {
+    private List<ItemStack> deserializeItemStackList(String serializedDrops) {
         if (serializedDrops == null || serializedDrops.isEmpty()) {
             return List.of(); // Return an empty list if the input is null or empty
         }

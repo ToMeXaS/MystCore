@@ -1,7 +1,10 @@
 package lt.tomexas.mystcore.submodules.resources.managers;
 
-import lt.tomexas.mystcore.submodules.resources.ResourcesMain;
+import com.ticxo.modelengine.api.ModelEngineAPI;
+import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -12,7 +15,7 @@ import java.util.UUID;
 
 public final class CommandManager {
 
-    private static final ResourcesMain resourcesMain = ResourcesMain.getInstance();
+    private static final Main plugin = Main.getInstance();
 
     // Private constructor to prevent instantiation
     private CommandManager() {
@@ -40,7 +43,7 @@ public final class CommandManager {
      * @param args   the command arguments
      */
     public static void handleGetTreeSpawner(Player player, String treeId) {
-        FileConfiguration config = resourcesMain.getFileConfigurations().get(treeId);
+        FileConfiguration config = plugin.getConfigManager().getFileConfigurations().get(treeId);
         if (config == null) {
             player.sendMessage("§cNo configuration found for the given ID: " + treeId + "!");
             return;
@@ -66,7 +69,20 @@ public final class CommandManager {
         Tree tree = Tree.getByRayTraceResult(result);
         if (tree != null) {
             UUID uuid = tree.getUuid();
-            Tree.removeTree(uuid);
+            if (!tree.remove()) {
+                player.sendMessage("§cFailed to remove the tree!");
+                return;
+            }
+
+            ModelEngineAPI.getModeledEntity(uuid).markRemoved();
+
+            // Remove the barrier blocks if they exist
+            Bukkit.getScheduler().runTask(Main.getInstance(), () ->
+                    tree.getBarrierBlocks().forEach(block -> block.setType(Material.AIR))
+            );
+
+            // Remove the tree from the database
+            plugin.getResourcesDatabase().removeTree(uuid);
             player.sendMessage("§aTree removed successfully!");
         } else {
             player.sendMessage("§cNo tree found at the targeted location!");
@@ -77,7 +93,8 @@ public final class CommandManager {
      * Handles the "setrespawntime" command.
      *
      * @param player the player executing the command
-     * @param uuid   the UUID of the tree entity
+     * @param block  the block the player is looking at
+     * @param time   the respawn time to set
      */
     public static void handleSetRespawnTime(Player player, Block block, String time) {
 
@@ -100,23 +117,6 @@ public final class CommandManager {
         } else {
             player.sendMessage("§cNo tree found at the targeted location!");
         }
-    }
-
-    /**
-     * Validates the length of the command arguments.
-     *
-     * @param player       the player executing the command
-     * @param args         the command arguments
-     * @param requiredArgs the required number of arguments
-     * @param usageMessage the usage message to display if validation fails
-     * @return true if the arguments are valid, false otherwise
-     */
-    private static boolean validateArgsLength(Player player, String[] args, int requiredArgs, String usageMessage) {
-        if (args.length < requiredArgs) {
-            player.sendMessage("§c" + usageMessage);
-            return false;
-        }
-        return true;
     }
 
     /**

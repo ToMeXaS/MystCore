@@ -83,13 +83,14 @@ public class PersistentDataUtil {
 
         if (skillsSection != null) {
             for (String key : skillsSection.getKeys(false)) {
+                String type = skillsSection.getString(key + ".type", "woodcutting"); // Default to empty string if not specified
                 int level = skillsSection.getInt(key + ".level", 1); // Default level to 1 if not specified
                 double experience = skillsSection.getDouble(key + ".experience", 0.0); // Default experience to 0.0
                 double health = skillsSection.getDouble(key + ".health", 0.0); // Default health to 0.0
                 double stamina = skillsSection.getDouble(key + ".stamina", 0.0); // Default stamina to 0.0
 
                 if (level > 0) {
-                    skills.add(new Skill(level, experience, health, stamina));
+                    skills.add(new Skill(type, level, experience, health, stamina));
                 } else {
                     logger.warning("Skill level is missing for key: " + key);
                 }

@@ -12,7 +12,7 @@ import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
-import lt.tomexas.mystcore.MystPlayer;
+import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.submodules.worldguard.records.EntryCheckResult;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;

@@ -28,8 +28,8 @@ public class ItemManager {
      */
     public static ItemStack getItemStack(FileConfiguration config) {
         String modelId = config.getString("model_id");
-        int respawnTime = config.getInt("respawn_time", -1);
-        int glowChance = config.getInt("glow_chance", -1);
+        int respawnTime = config.getInt("respawn_time");
+        int glowChance = config.getInt("glow_chance");
         String skillType = config.getString("skill_type");
         List<Skill> skills = PersistentDataUtil.loadSkillsFromConfig(config);
         List<Axe> axes = PersistentDataUtil.loadAxesFromConfig(config);

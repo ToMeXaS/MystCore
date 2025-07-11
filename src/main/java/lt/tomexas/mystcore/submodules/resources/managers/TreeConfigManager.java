@@ -1,6 +1,7 @@
 package lt.tomexas.mystcore.submodules.resources.managers;
 
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.PluginLogger;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -18,14 +19,14 @@ public class TreeConfigManager {
     }
 
     public void loadConfig() {
-        File configFile = new File(CONFIG_PATH, CONFIG_NAME);
+        File configFile = new File(this.CONFIG_PATH, this.CONFIG_NAME);
 
-        config = YamlConfiguration.loadConfiguration(configFile);
-        plugin.getLogger().info("Config loaded: " + configFile.getPath());
+        this.config = YamlConfiguration.loadConfiguration(configFile);
+        //PluginLogger.debug("Config loaded: " + configFile.getPath());
     }
 
     public FileConfiguration getConfig() {
-        if (config == null) {
+        if (this.config == null) {
             loadConfig();
         }
         return config;

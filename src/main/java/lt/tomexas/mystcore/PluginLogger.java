@@ -24,6 +24,6 @@ public class PluginLogger {
     }
 
     public static void debug(String message) {
-        logger.fine( "[DEBUG] " + message);
+        logger.warning( "[DEBUG] " + message);
     }
 }

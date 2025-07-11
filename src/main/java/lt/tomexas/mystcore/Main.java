@@ -5,15 +5,16 @@ import com.bgsoftware.superiorskyblock.api.SuperiorSkyblockAPI;
 import com.bgsoftware.superiorskyblock.api.island.Island;
 import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
 import lombok.Getter;
+import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.listeners.*;
 import lt.tomexas.mystcore.playerfontimage.PlayerFontImage;
-import lt.tomexas.mystcore.playerfontimage.impl.MinotarSource;
-import lt.tomexas.mystcore.submodules.resources.ResourcesMain;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import lt.tomexas.mystcore.submodules.resources.listeners.BaseEntityInteractListener;
 import lt.tomexas.mystcore.submodules.resources.ResourcesDatabase;
 import lt.tomexas.mystcore.submodules.resources.listeners.PlayerInteractListener;
 import lt.tomexas.mystcore.submodules.resources.commands.MystResourcesCommand;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.managers.ConfigManager;
+import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
 import lt.tomexas.mystcore.submodules.worldguard.flags.DenyEntryFlag;
 import lt.tomexas.mystcore.submodules.worldguard.listeners.PlayerAreaEnterListener;
 import net.Indyuce.mmocore.api.player.PlayerData;
@@ -36,66 +37,37 @@ public final class Main extends JavaPlugin {
     @Getter
     private static Main instance;
     @Getter
-    private Database database;
-    @Getter
     private ResourcesDatabase resourcesDatabase;
     @Getter
     private PlayerFontImage playerFontImage;
 
+    @Getter
+    private ConfigManager configManager;
+    @Getter
+    private TreeChopperManager treeChopperManager;
+
     @Override
     public void onLoad() {
-        registerWorldGuardFlags();
+        //registerWorldGuardFlags();
     }
 
     @Override
     public void onEnable() {
         instance = this;
-        new ResourcesMain();
-        this.playerFontImage = PlayerFontImage.initialize(this);
-        setupDatabases();
+        initManagers();
         registerEvents();
         registerCommands();
         registerPlaceholders();
-        loadResources();
+        initDatabases();
         initializePlayers();
         startPlayerTask();
     }
 
     @Override
     public void onDisable() {
-        closeDatabases();
-    }
-
-    private void setupDatabases() {
-        try {
-            if (!getDataFolder().exists()) {
-                getDataFolder().mkdirs();
-            }
-            database = new Database(getDataFolder().getAbsolutePath() + "/players.db");
-            resourcesDatabase = new ResourcesDatabase(getDataFolder().getAbsolutePath());
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                database.addPlayer(player);
-            }
-        } catch (SQLException e) {
-            getLogger().severe("Failed to connect to the database! " + e.getMessage());
-            e.printStackTrace();
-            Bukkit.getPluginManager().disablePlugin(this);
-        }
-    }
-
-    private void closeDatabases() {
-        try {
-            if (database != null) {
-                database.closeConnection();
-            }
-
-            if (resourcesDatabase != null) {
-                resourcesDatabase.addOrUpdateTrees(Tree.getAllTrees().keySet());
-                resourcesDatabase.closeConnection();
-            }
-        } catch (SQLException e) {
-            getLogger().severe("Error while closing database connections: " + e.getMessage());
-        }
+        // Save any necessary data or perform cleanup here
+        saveResourcesData();
+        getLogger().info("MystCore has been disabled.");
     }
 
     private void registerWorldGuardFlags() {
@@ -104,7 +76,6 @@ public final class Main extends JavaPlugin {
 
     private void registerEvents() {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerMoveListener(), this);
         getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDamageByEntityListener(), this);
         getServer().getPluginManager().registerEvents(new BaseEntityInteractListener(), this);
@@ -122,22 +93,33 @@ public final class Main extends JavaPlugin {
         new Placeholders(this).register();
     }
 
-    private void loadResources() {
-        resourcesDatabase.loadAllTrees();
+    private void saveResourcesData() {
+        this.resourcesDatabase.addOrUpdateTrees(Tree.getAllTrees().keySet());
+    }
+
+    private void initDatabases() {
+        try {
+            this.resourcesDatabase = new ResourcesDatabase();
+            this.resourcesDatabase.loadAllTrees();
+        } catch (SQLException e) {
+            PluginLogger.debug("Failed to initialize databases: " + e.getMessage());
+        }
+
     }
 
     private void initializePlayers() {
-        /*database.getAllPlayerHeads().forEach((uuid, playerHead) -> {
-            OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-            new MystPlayer(player, PlayerData.get(uuid), playerHead, null);
-        });*/
-
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (!MystPlayer.hasMystPlayer(player)) {
+            MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
+            if (mystPlayer == null) {
                 PlayerData playerData = PlayerData.get(player.getUniqueId());
-                new MystPlayer(player, playerData, null);
+                new MystPlayer(player, playerData);
             }
         }
+    }
+
+    private void initManagers() {
+        this.treeChopperManager = new TreeChopperManager();
+        this.configManager = new ConfigManager();
     }
 
     private void startPlayerTask() {
@@ -166,10 +148,10 @@ public final class Main extends JavaPlugin {
     }
 
     private void updatePlayerStamina(MystPlayer mystPlayer) {
-        Player player = mystPlayer.getSpigotPlayer().getPlayer();
+        Player player = mystPlayer.getPlayer();
         PlayerData playerData = PlayerData.get(player);
 
-        if (mystPlayer.isJumping() || player.isSprinting()) {
+        if (player.isSprinting()) {
             if (playerData.getStamina() > 2) {
                 playerData.setStamina(playerData.getStamina() - 3);
             } else {

@@ -1,30 +1,23 @@
-package lt.tomexas.mystcore.submodules.resources;
+package lt.tomexas.mystcore.submodules.resources.managers;
 
 import lombok.Getter;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
-import lt.tomexas.mystcore.submodules.resources.managers.TreeConfigManager;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ResourcesMain {
+public class ConfigManager {
 
     private final Main plugin = Main.getInstance();
-    @Getter
-    private static ResourcesMain instance;
     private final String CONFIG_PATH = plugin.getDataFolder().getPath();
-    @Getter
-    private final TreeChopperManager treeChopperManager;
+
     @Getter
     private final Map<String, FileConfiguration> fileConfigurations = new HashMap<>();
 
-    public ResourcesMain() {
-        instance = this;
-        this.treeChopperManager = new TreeChopperManager();
+    public ConfigManager() {
         loadTreeConfiguration();
     }
 

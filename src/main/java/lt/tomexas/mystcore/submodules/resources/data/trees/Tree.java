@@ -1,12 +1,11 @@
 package lt.tomexas.mystcore.submodules.resources.data.trees;
 
-import com.ticxo.modelengine.api.ModelEngineAPI;
 import lombok.Getter;
 import lombok.Setter;
-import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
+import lt.tomexas.mystcore.submodules.resources.data.interfaces.AxeRequirementHolder;
+import lt.tomexas.mystcore.submodules.resources.data.interfaces.SkillRequirementHolder;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -25,15 +24,14 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class Tree {
+public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
 
-    private static final Main plugin = Main.getInstance();
     private static final Map<UUID, Tree> REGISTRY = new HashMap<>();
 
     // Tree properties
     private final UUID uuid;
-    private final UUID textEntityId;
-    private UUID healthEntityId;
+    private TextDisplay textDisplay;
+    private TextDisplay healthDisplay;
 
     private Player harvester;
     private final World world;
@@ -52,7 +50,7 @@ public class Tree {
     private final List<ItemStack> drops;
 
     public Tree(@NotNull UUID uuid,
-                UUID textEntityId,
+                TextDisplay textDisplay,
                 Location location,
                 List<Block> barrierBlocks,
                 String modelId,
@@ -63,7 +61,7 @@ public class Tree {
                 List<Axe> axes,
                 List<ItemStack> drops) {
         this.uuid = uuid;
-        this.textEntityId = textEntityId;
+        this.textDisplay = textDisplay;
 
         this.world = location.getWorld();
         this.location = location;
@@ -87,6 +85,34 @@ public class Tree {
 
     public static boolean exists(UUID uuid) {
         return REGISTRY.containsKey(uuid);
+    }
+
+    public boolean remove() {
+        if (!exists(this.uuid)) {
+            PluginLogger.debug("Tree with UUID " + this.uuid + " does not exist in the registry.");
+            return false;
+        }
+        UUID uuid = this.getUuid();
+        REGISTRY.remove(uuid);
+        removeTextDisplay();
+        removeHealthDisplay();
+        return true;
+    }
+
+    public void removeTextDisplay() {
+        if (this.textDisplay != null) {
+            this.textDisplay.remove();
+            this.textDisplay = null;
+        }
+    }
+
+    public void removeHealthDisplay() {
+        if (this.healthDisplay != null) {
+            this.healthDisplay.remove();
+            this.healthDisplay = null;
+            PluginLogger.info("Removed health display for tree " + this.getName(this.modelId) + " at " + this.location.toVector().toString() + ".");
+        }
+
     }
 
     public static Tree getTreeByUuid(UUID uuid) {
@@ -120,31 +146,6 @@ public class Tree {
         return getByBlock(block);
     }
 
-    public static void removeTree(UUID uuid) {
-        Tree tree = REGISTRY.remove(uuid);
-        if (tree == null) {
-            PluginLogger.debug("Tree with UUID " + uuid + " is not registered in Tree registry.");
-            return;
-        }
-
-        // Remove the text entity if it exists
-        World world = tree.getWorld();
-        if (world != null) {
-            Entity textEntity = world.getEntity(tree.getTextEntityId());
-            if (textEntity != null) textEntity.remove();
-        }
-
-        ModelEngineAPI.getModeledEntity(uuid).markRemoved();
-
-        // Remove the barrier blocks if they exist
-        Bukkit.getScheduler().runTask(plugin, () ->
-                tree.getBarrierBlocks().forEach(block -> block.setType(Material.AIR))
-        );
-
-        // Remove the tree from the database
-        plugin.getResourcesDatabase().removeTree(uuid);
-    }
-
     private String getName(String modelName) {
         if (modelName == null || modelName.isEmpty()) {
             return modelName; // Return as is if null or empty
@@ -156,14 +157,33 @@ public class Tree {
 
     private String getDisplayText(World world) {
         if (world != null) {
-            Entity entity = world.getEntity(textEntityId);
+            Entity entity = world.getEntity(this.textDisplay.getUniqueId());
             if (entity instanceof TextDisplay textEntity) {
-                String capitalizedSkillType = skillType.substring(0, 1).toUpperCase() + skillType.substring(1).toLowerCase();
-                String text = "§l" + getName(modelId) + "§r\n" + capitalizedSkillType + " (Lvl. " + skillData.getFirst().level() + ")";
+                String capitalizedSkillType = getSkillType().substring(0, 1).toUpperCase() + getSkillType().substring(1).toLowerCase();
+                String text = "§l" + getName(modelId) + "§r\n" + capitalizedSkillType + " (Lvl. " + getSkillData().getFirst().level() + ")";
                 textEntity.text(Component.text(text));
                 entityText = text;
             }
         }
         return entityText;
+    }
+
+    @Override
+    public List<Skill> getSkillData() {
+        return this.skillData;
+    }
+
+    @Override
+    public String getSkillType() {
+        return this.skillType;
+    }
+
+    @Override
+    public List<Axe> getAxes() {
+        return this.axes;
+    }
+
+    public void ifPresent(Object o) {
+
     }
 }

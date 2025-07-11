@@ -6,6 +6,7 @@ import com.ticxo.modelengine.api.entity.BaseEntity;
 import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
+import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
@@ -15,10 +16,11 @@ import net.Indyuce.mmocore.experience.EXPSource;
 import net.Indyuce.mmocore.experience.Profession;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 
 import java.util.*;
@@ -27,93 +29,51 @@ public class TreeChopperManager {
     private final Main plugin = Main.getInstance();
 
     private static final int INACTIVITY_TIMEOUT = 30; // seconds
-    private BukkitTask choppingTask;
 
     // Maps to track player interactions with trees
-    private final Map<UUID, Integer> hitCounts = new HashMap<>();
+    private final Map<UUID, Double> hitCounts = new HashMap<>();
     private final Map<UUID, BukkitRunnable> inactivityTimers = new HashMap<>();
-    private final Map<UUID, UUID> playerHarvestingTree = new HashMap<>();
     private final Map<UUID, Boolean> glowingTrees = new HashMap<>();
-    private final Map<UUID, UUID> healthDisplay = new HashMap<>();
 
-    public void startChopping(Player player, UUID entityId) {
+    public TreeChopperManager() {
+        schedule();
+    }
+
+    public void handleChop(Player player, UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return;
-        if (player == null || entityId == null) return;
+        if (tree == null || player == null || entityId == null) return;
+        MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
+        if (mystPlayer == null) return;
+        Skill skill = mystPlayer.getSkill(tree, tree.getSkillType());
+        Axe axe = mystPlayer.getAxe(tree, player.getInventory().getItemInMainHand());
+        double hits = hitCounts.getOrDefault(entityId, 0.0);
+        if (isChoppedDown(player, tree)) return;
+        if (!canHarvestTree(player, tree)) return;
+        if (isAlreadyHarvestingDifferentTree(player, tree)) return;
+        if (skill == null || axe == null) return;
+        double playerAttackCooldown = player.getAttackCooldown();
+        int baseDamage = axe.damage();
+        double scaledDamage = (int) Math.round(baseDamage * playerAttackCooldown);
+        hitCounts.merge(entityId, scaledDamage, Double::sum);
 
-        if (isChoppedDown(player, tree)) return; // Check if the tree is already chopped down
-        if (!canHarvestTree(player, tree)) return; // Check if the player can harvest the tree
-        if (isAlreadyHarvestingDifferentTree(player, tree)) return; // Check if the player is already harvesting a different tree
-        if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) {
-            handleCriticalHit(player, tree);
-            return;
-        } // If the tree was glowing, remove the glow and handle critical hit
-        if (isAlreadyHarvestingTree(player)) return; // Check if the player is already harvesting this tree
-
-        playerHarvestingTree.put(player.getUniqueId(), entityId);
         tree.setHarvester(player);
-
         updateTextDisplay(entityId);
-        createHealthDisplay(player, entityId);
+        resetInactivityTimer(player, entityId);
 
-        handleTask();
+        updateHealthDisplay(mystPlayer, entityId, hits);
+        player.playSound(player.getLocation(), "block.wood.chop3", 1, 1);
 
-        player.sendMessage("§aYou started chopping the tree!");
+        if (hits >= skill.health()) chopTree(mystPlayer, entityId);
     }
 
-    private void handleTask() {
-        if (this.choppingTask != null && !this.choppingTask.isCancelled()) return;
-        this.choppingTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                if (playerHarvestingTree.isEmpty()) this.cancel();
-                for (Map.Entry<UUID, UUID> entry : playerHarvestingTree.entrySet()) {
-                    Player player = Bukkit.getPlayer(entry.getKey());
-                    UUID entityId = entry.getValue();
-                    if (player == null || !isPlayerOnline(player, entityId)) continue;
-                    if (!isPlayerTargetingTree(player, entityId)) continue;
-                    if (isTreeGlowing(entityId)) {
-                        player.sendMessage("§aThe tree starts to glow! Hit it to do a §c§l*CRITICAL HIT*§a!");
-                        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                    }
-
-                    resetInactivityTimer(player, entityId);
-
-                    int hits = hitCounts.getOrDefault(entityId, 0);
-                    Tree tree = Tree.getTreeByUuid(entityId);
-                    if (tree == null) continue;
-                    Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
-                    Axe axe = getPlayerAxe(player, tree.getAxes());
-
-                    if (skill == null || axe == null) continue;
-
-                    if (hits >= skill.health()) finishChopping(player, entityId);
-
-                    hitCounts.merge(entityId, axe.damage(), Integer::sum);
-                    updateHealthDisplay(player, entityId, hits);
-                    player.playSound(player.getLocation(), "block.wood.chop3", 1, 1);
-                    player.swingMainHand();
-                    PluginLogger.debug("Running chopping task!");
-                }
-            }
-        }.runTaskTimer(plugin, 0, 20L);
-    }
-
-    private void finishChopping(Player player, UUID entityId) {
-        hitCounts.remove(entityId);
-        playerHarvestingTree.remove(player.getUniqueId());
-        cancelInactivityTimer(entityId);
-        chopTree(player, entityId);
-    }
-
-    private void chopTree(Player player, UUID entityId) {
+    private void chopTree(MystPlayer mystPlayer, UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
-        Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
+        Skill skill = mystPlayer.getSkill(tree, tree.getSkillType());
         if (skill == null) return;
 
-        PlayerData playerData = PlayerData.get(player.getUniqueId());
-
+        hitCounts.remove(entityId);
+        cancelInactivityTimer(entityId);
         tree.setChopped(true);
         tree.setHarvester(null);
         tree.getBarrierBlocks().stream()
@@ -124,55 +84,48 @@ public class TreeChopperManager {
         IAnimationProperty animation = playTreeFallAnimation(tree);
         if (animation == null) return;
 
-        if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) setTreeGlow(entityId, false);
+        //if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) setTreeGlow(entityId, false);
 
-        resetHealthDisplay(entityId);
+        tree.removeHealthDisplay();
 
         if (tree.getDrops() != null) {
             List<ItemStack> drops = new ArrayList<>(tree.getDrops()); // Clone the drops list
             for (ItemStack drop : drops) {
-                HashMap<Integer, ItemStack> remaining = player.getInventory().addItem(drop);
+                HashMap<Integer, ItemStack> remaining = mystPlayer.getPlayer().getInventory().addItem(drop);
                 if (!remaining.isEmpty()) {
                     // If the item couldn't be fully added, drop the remaining items on the ground
                     for (ItemStack leftover : remaining.values()) {
-                        player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                        mystPlayer.getPlayer().getWorld().dropItemNaturally(mystPlayer.getPlayer().getLocation(), leftover);
                     }
-                    player.sendMessage("§eSome items were dropped on the ground due to insufficient inventory space.");
+                    mystPlayer.getPlayer().sendMessage("§eSome items were dropped on the ground due to insufficient inventory space.");
                 }
             }
         }
 
-        playerData.setStamina(
-                PlayerData.get(player.getUniqueId()).getStamina() - skill.stamina()
+        mystPlayer.getPlayerData().setStamina(
+                PlayerData.get(mystPlayer.getPlayer().getUniqueId()).getStamina() - skill.stamina()
         );
 
         Profession profession = MMOCore.plugin.professionManager.get("woodcutting");
-        playerData.getCollectionSkills().giveExperience(profession, skill.experience(), EXPSource.SOURCE);
+        mystPlayer.getPlayerData().getCollectionSkills().giveExperience(profession, skill.experience(), EXPSource.SOURCE);
 
         scheduleTreeRespawn(tree, animation);
     }
 
-    private boolean isAlreadyHarvestingDifferentTree(Player player, Tree tree) {
-        UUID playerId = player.getUniqueId();
-        UUID currentTree = playerHarvestingTree.get(playerId);
-
-        if (currentTree != null && !currentTree.equals(tree.getUuid())) {
-            player.sendMessage("§cYou are already harvesting a different tree!");
-            return true;
+    public boolean isAlreadyHarvestingDifferentTree(Player player, Tree currentTree) {
+        UUID playerUuid = player.getUniqueId();
+        for (Tree tree : Tree.getAllTrees().values()) {
+            if (tree.getHarvester() != null
+                    && tree.getHarvester().getUniqueId().equals(playerUuid)
+                    && !tree.equals(currentTree)) {
+                player.sendMessage("§cYou are already harvesting a different tree!");
+                return true;
+            }
         }
         return false;
     }
 
-    private boolean isAlreadyHarvestingTree(Player player) {
-        UUID playerId = player.getUniqueId();
-        if (playerHarvestingTree.containsKey(playerId)) {
-            player.sendMessage("§cYou are already harvesting this tree!");
-            return true;
-        }
-        return false;
-    }
-
-    private void handleCriticalHit(Player player, Tree tree) {
+    /*private void handleCriticalHit(Player player, Tree tree) {
         UUID entityId = tree.getUuid();
         player.sendMessage("§c§l*CRITICAL HIT*");
         Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
@@ -185,7 +138,7 @@ public class TreeChopperManager {
         hitCounts.put(entityId, currentHits + Math.min(axe.criticalHit(), remainingHits));
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
         setTreeGlow(entityId, false);
-    }
+    }*/
 
     private boolean isChoppedDown(Player player, Tree tree) {
         if (tree.isChopped()) {
@@ -193,28 +146,6 @@ public class TreeChopperManager {
             return true;
         }
         return false;
-    }
-
-    private boolean isPlayerOnline(Player player, UUID entityId) {
-        Tree tree = Tree.getTreeByUuid(entityId);
-        if (!player.isOnline() && tree != null) {
-            hitCounts.remove(entityId);
-            playerHarvestingTree.remove(player.getUniqueId());
-            cancelInactivityTimer(entityId);
-            tree.setHarvester(null);
-            resetTextDisplay(entityId);
-            if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) setTreeGlow(entityId, false);
-            return false;
-        }
-        return true;
-    }
-
-    private boolean isPlayerTargetingTree(Player player, UUID entityId) {
-        RayTraceResult result = player.rayTraceBlocks(3.0);
-        Tree tree = Tree.getByRayTraceResult(result);
-        //player.sendMessage("§cYou stopped harvesting the tree!");
-        //playerHarvestingTree.remove(player.getUniqueId());
-        return tree != null && tree.getUuid().equals(entityId);
     }
 
     private boolean isTreeGlowing(UUID entityId) {
@@ -247,9 +178,10 @@ public class TreeChopperManager {
         BukkitRunnable timer = new BukkitRunnable() {
             @Override
             public void run() {
+                Tree tree = Tree.getTreeByUuid(entityId);
+                if (tree == null) return;
                 resetTextDisplay(entityId);
-                resetHealthDisplay(entityId);
-                playerHarvestingTree.remove(player.getUniqueId());
+                tree.removeHealthDisplay();
                 setTreeGlow(entityId, false);
                 glowingTrees.remove(entityId);
                 hitCounts.remove(entityId);
@@ -301,7 +233,7 @@ public class TreeChopperManager {
     }
 
     private void updateRespawnText(Tree tree, int timer) {
-        TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
+        TextDisplay textDisplay = tree.getTextDisplay();
         if (textDisplay != null) {
             textDisplay.text(Component.text("§c§l[" + (tree.getRespawnTime() - timer) + " sec]§r§8\n"
                     + tree.getEntityText().replace("§r", "§8")));
@@ -317,39 +249,31 @@ public class TreeChopperManager {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
 
-        TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
+        TextDisplay textDisplay = tree.getTextDisplay();
         if (textDisplay != null) {
             textDisplay.text(Component.text("§6§l[" + tree.getHarvester().getName() + "]§f\n" + tree.getEntityText()));
         }
     }
 
-    private void resetHealthDisplay(UUID entityId) {
+    private void updateHealthDisplay(MystPlayer mystPlayer, UUID entityId, double hits) {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
-        World world = tree.getWorld();
-        if (healthDisplay.containsKey(entityId)) {
-            Entity entity = world.getEntity(healthDisplay.get(entityId));
-            if (entity != null) entity.remove();
-            tree.setHealthEntityId(null);
-            healthDisplay.remove(entityId);
+        TextDisplay display = tree.getHealthDisplay();
+        Skill skill = mystPlayer.getSkill(tree, tree.getSkillType());
+        if (skill == null) {
+            PluginLogger.debug("No skill found for tree " + tree + " and type " + tree.getSkillType());
+            return;
         }
-    }
-
-    private void updateHealthDisplay(Player player, UUID entityId, int hits) {
-        Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return;
-        World world = tree.getWorld();
-        if (!healthDisplay.containsKey(entityId)) return;
-        TextDisplay display = (TextDisplay) world.getEntity(healthDisplay.get(entityId));
-        if (display == null) return;
-        int health = (int) getPlayerSkill(player, tree.getSkillType(), tree.getSkillData()).health()-hits;
-        int maxHealth = (int) getPlayerSkill(player, tree.getSkillType(), tree.getSkillData()).health();
+        double health = skill.health() - hits;
+        int maxHealth = (int) skill.health();
+        health = Math.max(0, health);
+        if (display == null) display = createHealthDisplay(mystPlayer, entityId);
         display.text(Component.text(getProgressBar(health, maxHealth)));
     }
 
-    private void createHealthDisplay(Player player, UUID entityId) {
+    private TextDisplay createHealthDisplay(MystPlayer mystPlayer, UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return;
+        if (tree == null) return null;
         Location displayLocation = tree.getLocation().clone().add(0, -0.5, 0.5);
         displayLocation.setYaw(180f);
         TextDisplay display = tree.getWorld().spawn(displayLocation, TextDisplay.class, textDisplay -> {
@@ -357,24 +281,24 @@ public class TreeChopperManager {
             textDisplay.setShadowed(true);
             textDisplay.setSeeThrough(false);
             textDisplay.setViewRange(0.2f);
-            int health = (int) getPlayerSkill(player, tree.getSkillType(), tree.getSkillData()).health();
+            int health = (int) mystPlayer.getSkill(tree, tree.getSkillType()).health();
             textDisplay.text(Component.text(getProgressBar(health, health)));
         });
 
         for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-            if (!player.equals(onlinePlayer))
+            if (!mystPlayer.getPlayer().equals(onlinePlayer))
                 onlinePlayer.hideEntity(plugin, display);
         }
 
-        tree.setHealthEntityId(display.getUniqueId());
-        healthDisplay.put(entityId, display.getUniqueId());
+        tree.setHealthDisplay(display);
+        return display;
     }
 
     private void resetTextDisplay(UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
 
-        TextDisplay textDisplay = (TextDisplay) tree.getWorld().getEntity(tree.getTextEntityId());
+        TextDisplay textDisplay = tree.getTextDisplay();
         if (textDisplay != null) {
             textDisplay.text(Component.text(tree.getEntityText()));
         }
@@ -388,9 +312,13 @@ public class TreeChopperManager {
         return true;
     }
 
-    private Skill getPlayerSkill(Player player, String skillType, List<Skill> skills) {
-        UUID playerId = player.getUniqueId();
-        PlayerData playerData = PlayerData.get(playerId);
+    /*private Skill getPlayerSkill(Player player, String skillType, List<Skill> skills) {
+        MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
+        if (mystPlayer == null) {
+            PluginLogger.debug("MystPlayer not found for player: " + player.getName());
+            return null;
+        }
+        PlayerData playerData = mystPlayer.getPlayerData();
         int level = playerData.getCollectionSkills().getLevel(skillType);
         Skill skill = skills.stream()
                 .max(Comparator.comparingInt(Skill::level))
@@ -400,9 +328,9 @@ public class TreeChopperManager {
             return skill;
         }
         return null;
-    }
+    }*/
 
-    private Axe getPlayerAxe(Player player, List<Axe> axes) {
+    /*private Axe getPlayerAxe(Player player, List<Axe> axes) {
         ItemStack itemInHand = player.getInventory().getItemInMainHand();
         for (Axe axe : axes) {
             if (axe.getItemStack().equals(itemInHand)) {
@@ -410,7 +338,7 @@ public class TreeChopperManager {
             }
         }
         return null;
-    }
+    }*/
 
     public String getProgressBar(double progress, double maxProgress) {
         double percentage = progress / maxProgress * 100.0;
@@ -429,5 +357,70 @@ public class TreeChopperManager {
 
         // Build the final string
         return progressBar.toString();
+    }
+
+    private void schedule() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    RayTraceResult result = player.rayTraceBlocks(5);
+                    if (result == null || result.getHitBlock() == null) return;
+                    Tree tree = Tree.getByRayTraceResult(result);
+                    if (tree == null) return;
+
+                    BlockFace blockFace = result.getHitBlockFace();
+                    if (blockFace == null) return;
+
+                    TextDisplay textDisplay = tree.getTextDisplay();
+                    TextDisplay healthDisplay = tree.getHealthDisplay();
+
+                    // Calculate yaw for the opposite block face
+                    BlockFace opposite = blockFace.getOppositeFace();
+                    float yaw = switch (opposite) {
+                        case SOUTH -> 180f;
+                        case EAST  -> 90f;
+                        case WEST  -> -90f;
+                        default -> 0f;
+                    };
+
+                    // Process textDisplay
+                    if (textDisplay != null) {
+                        Location textLoc = getTargetLocation(result, blockFace, 0.7);
+                        if (textLoc != null) {
+                            textLoc.setY(textDisplay.getY());
+                            textDisplay.teleport(textLoc);
+                            textDisplay.setRotation(yaw, 0f);
+                        } else {
+                            PluginLogger.debug("Target location is null for block: " + result.getHitBlock());
+                        }
+                    }
+
+                    // Process healthDisplay
+                    if (healthDisplay != null) {
+                        Location healthLoc = getTargetLocation(result, blockFace, 0.5);
+                        if (healthLoc != null) {
+                            healthLoc.setY(healthDisplay.getY());
+                            healthDisplay.teleport(healthLoc);
+                            healthDisplay.setRotation(yaw, 0f);
+                        } else {
+                            PluginLogger.debug("Target location is null for block: " + result.getHitBlock());
+                        }
+                    }
+                });
+            }
+        }.runTaskTimer(plugin, 0L, 20L); // Run every second
+    }
+
+    private Location getTargetLocation(RayTraceResult result, BlockFace blockFace, double distance) {
+        Block block = result.getHitBlock();
+        if (block == null) return null;
+        Location base = block.getLocation().clone().add(0.5, 0.5, 0.5);
+
+        return base.clone().add(
+                blockFace.getModX() * distance,
+                blockFace.getModY() * distance,
+                blockFace.getModZ() * distance
+        );
     }
 }
