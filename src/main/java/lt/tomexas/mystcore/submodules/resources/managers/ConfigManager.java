@@ -47,7 +47,7 @@ public class ConfigManager {
                         tree.setGlowChance(config.getGlowChance());
                         tree.setAxes(config.getAxes());
                         tree.setSkillType(config.getSkillType());
-                        tree.setSkillData(config.getSkills());
+                        tree.setSkillData(config.getSkillLevelData());
                         tree.setDrops(config.getDrops());
                     }
                 }

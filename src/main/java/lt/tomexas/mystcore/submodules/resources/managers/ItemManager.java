@@ -36,7 +36,7 @@ public class ItemManager {
         int respawnTime = config.getRespawnTime();
         int glowChance = config.getGlowChance();
         String skillType = config.getSkillType();
-        List<Skill> skills = config.getSkills();
+        List<Skill> skills = config.getSkillLevelData();
         List<Axe> axes = config.getAxes();
         List<Drop> drops = config.getDrops();
 

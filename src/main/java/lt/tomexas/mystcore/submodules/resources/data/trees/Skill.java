@@ -1,10 +1,10 @@
 package lt.tomexas.mystcore.submodules.resources.data.trees;
 
-public record Skill(String type, int level, double experience, double health, double stamina) {
+public record Skill(int level, double experience, double health, double stamina) {
 
     // Serialize the Skill object to a string
     public String serialize() {
-        return type + "/" + level + "/" + experience + "/" + health + "/" + stamina;
+        return level + "/" + experience + "/" + health + "/" + stamina;
     }
 
     // Deserialize a string back into a Skill object
@@ -15,16 +15,15 @@ public record Skill(String type, int level, double experience, double health, do
 
         String[] parts = serializedSkill.split("/");
         // Check if the serialized string has the correct number of parts
-        if (parts.length != 5) {
+        if (parts.length != 4) {
             throw new IllegalArgumentException("Serialized skill must have 5 parts");
         }
 
-        String type = parts[0];
-        int level = Integer.parseInt(parts[1]);
-        double experience = Double.parseDouble(parts[2]);
-        double health = Double.parseDouble(parts[3]);
-        double stamina = Double.parseDouble(parts[4]);
+        int level = Integer.parseInt(parts[0]);
+        double experience = Double.parseDouble(parts[1]);
+        double health = Double.parseDouble(parts[2]);
+        double stamina = Double.parseDouble(parts[3]);
 
-        return new Skill(type, level, experience, health, stamina);
+        return new Skill(level, experience, health, stamina);
     }
 }

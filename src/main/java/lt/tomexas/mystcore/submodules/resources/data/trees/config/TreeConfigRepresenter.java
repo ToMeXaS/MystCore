@@ -15,10 +15,22 @@ public class TreeConfigRepresenter extends Representer {
     public TreeConfigRepresenter(DumperOptions options) {
         super(options);
         this.addClassTag(TreeConfig.class, Tag.MAP);
+        this.representers.put(TreeConfig.class, data -> {
+            TreeConfig t = (TreeConfig) data;
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("modelId", t.getModelId());
+            map.put("uses", t.getUses());
+            map.put("respawnTime", t.getRespawnTime());
+            map.put("glowChance", t.getGlowChance());
+            map.put("skillType", t.getSkillType());
+            map.put("skillLevelData", t.getSkillLevelData());
+            map.put("axes", t.getAxes());
+            map.put("drops", t.getDrops());
+            return representMapping(Tag.MAP, map, options.getDefaultFlowStyle());
+        });
         this.representers.put(Skill.class, data -> {
             Skill s = (Skill) data;
             Map<String, Object> map = new LinkedHashMap<>();
-            map.put("type", s.type());
             map.put("level", s.level());
             map.put("experience", s.experience());
             map.put("health", s.health());

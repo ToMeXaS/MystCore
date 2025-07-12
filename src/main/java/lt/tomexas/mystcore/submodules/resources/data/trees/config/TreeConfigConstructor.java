@@ -6,9 +6,12 @@ import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.introspector.PropertyUtils;
 import org.yaml.snakeyaml.nodes.MappingNode;
 import org.yaml.snakeyaml.nodes.Node;
 
+import java.beans.IntrospectionException;
 import java.util.Map;
 
 public class TreeConfigConstructor extends Constructor {
@@ -19,8 +22,9 @@ public class TreeConfigConstructor extends Constructor {
         // Register property types for TreeSpawner
         TypeDescription spawnerDesc = new TypeDescription(TreeConfig.class);
         spawnerDesc.putListPropertyType("axes", Axe.class);
-        spawnerDesc.putListPropertyType("skills", Skill.class);
+        spawnerDesc.putListPropertyType("skillLevelData", Skill.class);
         spawnerDesc.putListPropertyType("drops", Drop.class);
+
         this.addTypeDescription(spawnerDesc);
     }
 
@@ -38,7 +42,6 @@ public class TreeConfigConstructor extends Constructor {
         if (node.getType() == Skill.class) {
             Map<Object, Object> raw = constructMapping((MappingNode) node);
             return new Skill(
-                    (String) raw.get("type"),
                     asInt(raw.get("level")),
                     asInt(raw.get("experience")),
                     asInt(raw.get("health")),

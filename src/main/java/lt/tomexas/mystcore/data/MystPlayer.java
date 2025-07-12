@@ -47,9 +47,11 @@ public class MystPlayer {
         return player.getUniqueId();
     }
 
-    public Skill getSkill(SkillRequirementHolder obj, String skillType) {
+    public Skill getSkill(SkillRequirementHolder obj) {
+        String skillType = obj.getSkillType();
+        int playerLevel = this.playerData.getCollectionSkills().getLevel(skillType);
         return obj.getSkillData().stream()
-                .filter(s -> s.type().equalsIgnoreCase(skillType))
+                .filter(s -> s.level() == playerLevel)
                 .findFirst()
                 .orElse(null);
     }

@@ -22,13 +22,12 @@ public class TreeConfig {
             new Axe("minecraft:wooden_axe", 1, 5),
             new Axe("minecraft:stone_axe", 5, 10)
     );
-    private List<Skill> skills = Arrays.asList(
-            new Skill(skillType, 1, 10, 50, 50),
-            new Skill(skillType, 5, 50, 30, 30)
+    private List<Skill> skillLevelData = Arrays.asList(
+            new Skill(1, 10, 50, 50),
+            new Skill(5, 50, 30, 30)
     );
     private List<Drop> drops = Arrays.asList(
             new Drop("minecraft:oak_log", 1),
             new Drop("minecraft:apple", 2)
     );
-
 }

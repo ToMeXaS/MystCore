@@ -42,7 +42,7 @@ public class TreeChopperManager {
         if (tree == null || player == null || entityId == null) return;
         MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
         if (mystPlayer == null) return;
-        Skill skill = mystPlayer.getSkill(tree, tree.getSkillType());
+        Skill skill = mystPlayer.getSkill(tree);
         Axe axe = mystPlayer.getAxe(tree, player.getInventory().getItemInMainHand());
         double hits = hitCounts.getOrDefault(entityId, 0.0);
         if (isChoppedDown(player, tree)) return;
@@ -69,7 +69,7 @@ public class TreeChopperManager {
     private void chopTree(MystPlayer mystPlayer, UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
-        Skill skill = mystPlayer.getSkill(tree, tree.getSkillType());
+        Skill skill = mystPlayer.getSkill(tree);
         if (skill == null) return;
 
         hitCounts.remove(entityId);
@@ -259,7 +259,7 @@ public class TreeChopperManager {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
         TextDisplay display = tree.getHealthDisplay();
-        Skill skill = mystPlayer.getSkill(tree, tree.getSkillType());
+        Skill skill = mystPlayer.getSkill(tree);
         if (skill == null) {
             PluginLogger.debug("No skill found for tree " + tree + " and type " + tree.getSkillType());
             return;
@@ -291,7 +291,7 @@ public class TreeChopperManager {
             textDisplay.setShadowed(true);
             textDisplay.setSeeThrough(false);
             textDisplay.setViewRange(0.2f);
-            int health = (int) mystPlayer.getSkill(tree, tree.getSkillType()).health();
+            int health = (int) mystPlayer.getSkill(tree).health();
             textDisplay.text(Component.text(getProgressBar(health, health)));
         });
 
