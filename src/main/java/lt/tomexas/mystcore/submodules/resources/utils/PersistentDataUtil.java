@@ -4,13 +4,7 @@ import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeSpawner;
-import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -78,29 +72,6 @@ public class PersistentDataUtil {
         return skills;
     }
 
-    // Load a list of Skills from FileConfiguration
-    /*public static List<Skill> loadSkillsFromConfig(TreeSpawner config) {
-        List<Skill> skills = config.getSkills();
-
-        if (skills != null) {
-            for (Skill skill : skills) {
-                String type = skill.type(); // Default to empty string if not specified
-                int level = skill.level(); // Default level to 1 if not specified
-                double experience = skill.experience(); // Default experience to 0.0
-                double health = skill.health(); // Default health to 0.0
-                double stamina = skill.stamina(); // Default stamina to 0.0
-
-                if (level > 0) {
-                    skills.add(new Skill(type, level, experience, health, stamina));
-                } else {
-                    logger.warning("Skill level is missing for key: " + key);
-                }
-            }
-        }
-
-        return skills;
-    }*/
-
     // Save a list of Axes to PersistentDataContainer
     public static void saveAxesToPDC(PersistentDataContainer container, List<Axe> axes) {
         if (axes == null || axes.isEmpty()) {
@@ -146,28 +117,6 @@ public class PersistentDataUtil {
         return axes;
     }
 
-    // Load a list of Axes from FileConfiguration
-    /*public static List<Axe> loadAxesFromConfig(FileConfiguration config) {
-        List<Axe> axes = new ArrayList<>();
-        ConfigurationSection axesSection = config.getConfigurationSection("axes");
-
-        if (axesSection != null) {
-            for (String key : axesSection.getKeys(false)) {
-                String itemType = axesSection.getString(key + ".type", ""); // Default to empty string if not specified
-                int damage = axesSection.getInt(key + ".damage", 0); // Default damage to 0
-                int criticalHit = axesSection.getInt(key + ".critical_hit", 0); // Default health to 0.0
-
-                if (!itemType.isEmpty()) {
-                    axes.add(new Axe(itemType, damage, criticalHit));
-                } else {
-                    logger.warning("Axe itemType is missing for key: " + key);
-                }
-            }
-        }
-
-        return axes;
-    }*/
-
     // Save a list of ItemStacks to PersistentDataContainer
     public static void saveDropsToPDC(PersistentDataContainer container, List<Drop> drops) {
         if (drops == null || drops.isEmpty()) {
@@ -211,33 +160,5 @@ public class PersistentDataUtil {
 
         return drops;
     }
-
-    // Load a list of ItemStacks from PersistentDataContainer
-    /*public static List<ItemStack> loadDropsFromConfig(FileConfiguration config) {
-        List<ItemStack> drops = new ArrayList<>();
-        ConfigurationSection dropsSection = config.getConfigurationSection("drops");
-
-        if (dropsSection != null) {
-            for (String key : dropsSection.getKeys(false)) {
-                String type = dropsSection.getString(key + ".type");
-                int amount = dropsSection.getInt(key + ".amount", 1); // Default to 1 if not specified
-
-
-                if (type != null && type.startsWith("minecraft:")) {
-                    String materialName = type.substring("minecraft:".length());
-                    Material material = Material.matchMaterial(materialName);
-                    if (material != null) {
-                        drops.add(new ItemStack(material, amount));
-                    } else {
-                        System.err.println("Invalid material type: " + type);
-                    }
-                } else {
-                    System.err.println("Unsupported type: " + type);
-                }
-            }
-        }
-
-        return drops;
-    }*/
 
 }

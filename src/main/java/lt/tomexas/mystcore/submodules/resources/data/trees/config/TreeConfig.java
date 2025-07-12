@@ -11,7 +11,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class TreeSpawner {
+public class TreeConfig {
 
     private String modelId = "oak_tree";
     private int uses = 1;

@@ -107,6 +107,7 @@ public class PlayerInteractListener implements Listener {
 
     private Dummy<?> spawnTreeModel(Location location, String modelId) {
         Dummy<?> dummy = new Dummy<>();
+        dummy.setForcedAlive(true);
         dummy.setLocation(location);
         //ArmorStand armorStand = location.getWorld().spawn(location, ArmorStand.class);
         //armorStand.setInvisible(true);

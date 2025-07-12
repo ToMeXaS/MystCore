@@ -17,7 +17,7 @@ public class TreeConfigConstructor extends Constructor {
         super(theRoot, options);
 
         // Register property types for TreeSpawner
-        TypeDescription spawnerDesc = new TypeDescription(TreeSpawner.class);
+        TypeDescription spawnerDesc = new TypeDescription(TreeConfig.class);
         spawnerDesc.putListPropertyType("axes", Axe.class);
         spawnerDesc.putListPropertyType("skills", Skill.class);
         spawnerDesc.putListPropertyType("drops", Drop.class);

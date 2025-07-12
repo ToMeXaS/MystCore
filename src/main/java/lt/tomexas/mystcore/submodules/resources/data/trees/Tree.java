@@ -42,11 +42,11 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
     // Tree configuration
     private final String modelId;
     private int respawnTime;
-    private final int glowChance;
-    private final String skillType;
-    private final List<Skill> skillData;
-    private final List<Axe> axes;
-    private final List<Drop> drops;
+    private int glowChance;
+    private String skillType;
+    private List<Skill> skillData;
+    private List<Axe> axes;
+    private List<Drop> drops;
 
     public Tree(@NotNull UUID uuid,
                 TextDisplay textDisplay,
@@ -123,10 +123,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
     }
 
     public static Tree getByBlock(Block block) {
-        if (block == null || block.getType() != Material.BARRIER) {
-            PluginLogger.debug("Block is null or is not a barrier block.");
-            return null;
-        }
+        if (block == null || block.getType() != Material.BARRIER) return null;
         return REGISTRY.values().stream()
                 .filter(tree -> tree.getBarrierBlocks().contains(block))
                 .findFirst()
@@ -137,10 +134,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
     }
 
     public static Tree getByRayTraceResult(RayTraceResult result) {
-        if (result == null || result.getHitBlock() == null) {
-            PluginLogger.debug("RayTraceResult is null or does not hit a block.");
-            return null;
-        }
+        if (result == null || result.getHitBlock() == null) return null;
         Block block = result.getHitBlock();
         return getByBlock(block);
     }

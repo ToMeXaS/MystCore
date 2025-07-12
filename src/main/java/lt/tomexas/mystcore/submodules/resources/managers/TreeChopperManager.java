@@ -51,8 +51,10 @@ public class TreeChopperManager {
         if (skill == null || axe == null) return;
         double playerAttackCooldown = player.getAttackCooldown();
         int baseDamage = axe.damage();
-        double scaledDamage = (int) Math.round(baseDamage * playerAttackCooldown);
+        double scaledDamage = (double) baseDamage * playerAttackCooldown;
         hitCounts.merge(entityId, scaledDamage, Double::sum);
+
+        player.sendMessage(Component.text(scaledDamage + " damage dealt to the tree!" + hitCounts.get(entityId) + " hits so far!"));
 
         tree.setHarvester(player);
         updateTextDisplay(entityId);
@@ -74,10 +76,10 @@ public class TreeChopperManager {
         cancelInactivityTimer(entityId);
         tree.setChopped(true);
         tree.setHarvester(null);
-        tree.getBarrierBlocks().stream()
+        /*/tree.getBarrierBlocks().stream()
                 .sorted(Comparator.comparingInt(block -> -block.getY()))
                 .limit(2)
-                .forEach(block -> block.setType(Material.AIR));
+                .forEach(block -> block.setType(Material.AIR));*/
 
         IAnimationProperty animation = playTreeFallAnimation(tree);
         if (animation == null) return;
@@ -273,7 +275,17 @@ public class TreeChopperManager {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return null;
         Location displayLocation = tree.getLocation().clone().add(0, -0.5, 0.5);
-        displayLocation.setYaw(180f);
+
+        Player player = mystPlayer.getPlayer();
+        Location playerLoc = player.getLocation();
+
+        double dx = playerLoc.getX() - displayLocation.getX();
+        double dz = playerLoc.getZ() - displayLocation.getZ();
+
+        float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+
+        displayLocation.setYaw(yaw);
+
         TextDisplay display = tree.getWorld().spawn(displayLocation, TextDisplay.class, textDisplay -> {
             textDisplay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
             textDisplay.setShadowed(true);

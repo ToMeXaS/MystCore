@@ -3,9 +3,10 @@ package lt.tomexas.mystcore.submodules.resources.managers;
 import lombok.Getter;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigConstructor;
 import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigRepresenter;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeSpawner;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -20,7 +21,7 @@ public class ConfigManager {
     private final String CONFIG_PATH = plugin.getDataFolder().getPath();
 
     @Getter
-    private final Map<String, TreeSpawner> fileConfigurations = new HashMap<>();
+    private final Map<String, TreeConfig> fileConfigurations = new HashMap<>();
 
     public ConfigManager() {
         loadTreeConfigurations();
@@ -38,8 +39,17 @@ public class ConfigManager {
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".yml")) {
                     plugin.getLogger().info("Found tree config file: " + file.getName());
-                    TreeSpawner config = loadConfig(file);
+                    TreeConfig config = loadConfig(file);
                     this.fileConfigurations.put(file.getName(), config);
+
+                    for (Tree tree : Tree.getAllTrees().values()) {
+                        tree.setRespawnTime(config.getRespawnTime());
+                        tree.setGlowChance(config.getGlowChance());
+                        tree.setAxes(config.getAxes());
+                        tree.setSkillType(config.getSkillType());
+                        tree.setSkillData(config.getSkills());
+                        tree.setDrops(config.getDrops());
+                    }
                 }
             }
         }
@@ -52,7 +62,7 @@ public class ConfigManager {
         File configFile = new File(configDir.getPath(), "oak_tree.yml");
 
         if (!configFile.exists()) {
-            TreeSpawner defaultSpawner = new TreeSpawner();
+            TreeConfig defaultSpawner = new TreeConfig();
 
             DumperOptions dumperOptions = new DumperOptions();
             dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
@@ -70,13 +80,13 @@ public class ConfigManager {
         }
     }
 
-    private TreeSpawner loadConfig(File file) {
+    private TreeConfig loadConfig(File file) {
         LoaderOptions loaderOptions = new LoaderOptions();
-        TreeConfigConstructor constructor = new TreeConfigConstructor(TreeSpawner.class, loaderOptions);
+        TreeConfigConstructor constructor = new TreeConfigConstructor(TreeConfig.class, loaderOptions);
 
         Yaml yaml = new Yaml(constructor);
         try (FileReader reader = new FileReader(file)) {
-            return yaml.loadAs(reader, TreeSpawner.class);
+            return yaml.loadAs(reader, TreeConfig.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

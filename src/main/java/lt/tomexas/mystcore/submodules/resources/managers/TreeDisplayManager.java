@@ -61,8 +61,6 @@ public class TreeDisplayManager implements Listener {
                             textLoc.setY(textDisplay.getY());
                             textDisplay.teleport(textLoc);
                             textDisplay.setRotation(yaw, 0f);
-                        } else {
-                            PluginLogger.debug("Target location is null for block: " + result.getHitBlock());
                         }
                     }
 
@@ -73,8 +71,6 @@ public class TreeDisplayManager implements Listener {
                             healthLoc.setY(healthDisplay.getY());
                             healthDisplay.teleport(healthLoc);
                             healthDisplay.setRotation(yaw, 0f);
-                        } else {
-                            PluginLogger.debug("Target location is null for block: " + result.getHitBlock());
                         }
                     }
                 });

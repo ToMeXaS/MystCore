@@ -3,11 +3,10 @@ package lt.tomexas.mystcore.submodules.resources.managers;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeSpawner;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
@@ -44,7 +43,7 @@ public final class CommandManager {
      * @param treeId the ID of the tree spawner configuration to retrieve
      */
     public static void handleGetTreeSpawner(Player player, String treeId) {
-        TreeSpawner config = plugin.getConfigManager().getFileConfigurations().get(treeId);
+        TreeConfig config = plugin.getConfigManager().getFileConfigurations().get(treeId);
         if (config == null) {
             player.sendMessage("§cNo configuration found for the given ID: " + treeId + "!");
             return;

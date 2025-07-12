@@ -5,7 +5,7 @@ import com.nexomc.nexo.items.ItemBuilder;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeSpawner;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
 import lt.tomexas.mystcore.submodules.resources.utils.PersistentDataUtil;
 import net.Indyuce.mmoitems.MMOItems;
 import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
@@ -31,7 +31,7 @@ public class ItemManager {
      * @param config the configuration to load item data from
      * @return the created ItemStack, or null if the configuration is invalid
      */
-    public static ItemStack getItemStack(TreeSpawner config) {
+    public static ItemStack getItemStack(TreeConfig config) {
         String modelId = config.getModelId();
         int respawnTime = config.getRespawnTime();
         int glowChance = config.getGlowChance();
