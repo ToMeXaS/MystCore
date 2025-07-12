@@ -2,7 +2,9 @@ package lt.tomexas.mystcore.submodules.resources.utils;
 
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeSpawner;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
@@ -77,17 +79,16 @@ public class PersistentDataUtil {
     }
 
     // Load a list of Skills from FileConfiguration
-    public static List<Skill> loadSkillsFromConfig(FileConfiguration config) {
-        List<Skill> skills = new ArrayList<>();
-        ConfigurationSection skillsSection = config.getConfigurationSection("skill_data");
+    /*public static List<Skill> loadSkillsFromConfig(TreeSpawner config) {
+        List<Skill> skills = config.getSkills();
 
-        if (skillsSection != null) {
-            for (String key : skillsSection.getKeys(false)) {
-                String type = skillsSection.getString(key + ".type", "woodcutting"); // Default to empty string if not specified
-                int level = skillsSection.getInt(key + ".level", 1); // Default level to 1 if not specified
-                double experience = skillsSection.getDouble(key + ".experience", 0.0); // Default experience to 0.0
-                double health = skillsSection.getDouble(key + ".health", 0.0); // Default health to 0.0
-                double stamina = skillsSection.getDouble(key + ".stamina", 0.0); // Default stamina to 0.0
+        if (skills != null) {
+            for (Skill skill : skills) {
+                String type = skill.type(); // Default to empty string if not specified
+                int level = skill.level(); // Default level to 1 if not specified
+                double experience = skill.experience(); // Default experience to 0.0
+                double health = skill.health(); // Default health to 0.0
+                double stamina = skill.stamina(); // Default stamina to 0.0
 
                 if (level > 0) {
                     skills.add(new Skill(type, level, experience, health, stamina));
@@ -98,7 +99,7 @@ public class PersistentDataUtil {
         }
 
         return skills;
-    }
+    }*/
 
     // Save a list of Axes to PersistentDataContainer
     public static void saveAxesToPDC(PersistentDataContainer container, List<Axe> axes) {
@@ -146,7 +147,7 @@ public class PersistentDataUtil {
     }
 
     // Load a list of Axes from FileConfiguration
-    public static List<Axe> loadAxesFromConfig(FileConfiguration config) {
+    /*public static List<Axe> loadAxesFromConfig(FileConfiguration config) {
         List<Axe> axes = new ArrayList<>();
         ConfigurationSection axesSection = config.getConfigurationSection("axes");
 
@@ -165,60 +166,54 @@ public class PersistentDataUtil {
         }
 
         return axes;
-    }
+    }*/
 
     // Save a list of ItemStacks to PersistentDataContainer
-    public static void saveDropsToPDC(PersistentDataContainer container, List<ItemStack> items) {
-        if (items == null || items.isEmpty()) {
-            container.remove(DROPS); // Remove key if no items
+    public static void saveDropsToPDC(PersistentDataContainer container, List<Drop> drops) {
+        if (drops == null || drops.isEmpty()) {
+            container.remove(DROPS); // Remove key if no axes
             return;
         }
 
-        List<String> serializedItems = new ArrayList<>();
-        for (ItemStack item : items) {
-            if (item != null) {
+        List<String> serializedDrops = new ArrayList<>();
+        for (Drop drop : drops) {
+            if (drop != null) {
                 try {
-                    YamlConfiguration config = new YamlConfiguration();
-                    config.set("item", item);
-                    serializedItems.add(config.saveToString());
+                    // Serialize each axe (assuming Axe has a custom serialize method)
+                    serializedDrops.add(drop.serialize());
                 } catch (Exception e) {
-                    System.err.println("Failed to serialize ItemStack: " + e.getMessage());
+                    logger.warning("Failed to serialize Axe: " + e.getMessage());
                 }
             }
         }
 
-        if (!serializedItems.isEmpty()) {
-            container.set(DROPS, PersistentDataType.STRING, String.join(";", serializedItems));
+        if (!serializedDrops.isEmpty()) {
+            container.set(DROPS, PersistentDataType.STRING, String.join(";", serializedDrops));
         } else {
             container.remove(DROPS); // Remove key if serialization fails
         }
     }
 
-    public static List<ItemStack> loadDropsFromPDC(PersistentDataContainer container) {
+    public static List<Drop> loadDropsFromPDC(PersistentDataContainer container) {
         String serializedData = container.get(DROPS, PersistentDataType.STRING);
         if (serializedData == null || serializedData.isEmpty()) {
             return new ArrayList<>(); // Return an empty list if no data is found
         }
 
-        List<ItemStack> items = new ArrayList<>();
-        for (String serializedItem : serializedData.split(";")) {
-            YamlConfiguration config = new YamlConfiguration();
+        List<Drop> drops = new ArrayList<>();
+        for (String serializedDrop : serializedData.split(";")) {
             try {
-                config.loadFromString(serializedItem);
-                ItemStack item = config.getItemStack("item");
-                if (item != null) {
-                    items.add(item);
-                }
+                drops.add(Drop.deserialize(serializedDrop));
             } catch (Exception e) {
-                System.err.println("Failed to deserialize ItemStack: " + e.getMessage());
+                logger.warning("Failed to deserialize Axe: " + e.getMessage());
             }
         }
 
-        return items;
+        return drops;
     }
 
     // Load a list of ItemStacks from PersistentDataContainer
-    public static List<ItemStack> loadDropsFromConfig(FileConfiguration config) {
+    /*public static List<ItemStack> loadDropsFromConfig(FileConfiguration config) {
         List<ItemStack> drops = new ArrayList<>();
         ConfigurationSection dropsSection = config.getConfigurationSection("drops");
 
@@ -243,6 +238,6 @@ public class PersistentDataUtil {
         }
 
         return drops;
-    }
+    }*/
 
 }

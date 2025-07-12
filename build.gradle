@@ -29,6 +29,7 @@ repositories {
     maven { url 'https://mvn.lumine.io/repository/maven-public/' }
     maven { url = "https://repo.aikar.co/content/groups/aikar/" }
     maven { url "https://maven.enginehub.org/repo/" }
+    maven { url "https://repo.nexomc.com/releases" }
 }
 
 dependencies {
@@ -42,6 +43,9 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.32'
     implementation 'co.aikar:acf-paper:0.5.1-SNAPSHOT'
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.8-SNAPSHOT'
+    implementation 'org.yaml:snakeyaml:2.2'
+    compileOnly 'com.nexomc:nexo:1.8.0'
+    compileOnly 'net.Indyuce:MMOItems-API:6.9.5-SNAPSHOT'
 }
 
 tasks {

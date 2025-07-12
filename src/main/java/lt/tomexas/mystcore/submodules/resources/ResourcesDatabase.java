@@ -9,6 +9,7 @@ import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import org.bukkit.Location;
@@ -109,7 +110,7 @@ public class ResourcesDatabase {
                 preparedStatement.setString(9, tree.getSkillType());
                 preparedStatement.setString(10, serializeSkillData(tree.getSkillData()));
                 preparedStatement.setString(11, serializeAxes(tree.getAxes()));
-                preparedStatement.setString(12, serializeItemStackList(tree.getDrops()));
+                preparedStatement.setString(12, serializeDrops(tree.getDrops()));
                 preparedStatement.addBatch(); // Add to batch
             }
 
@@ -180,7 +181,7 @@ public class ResourcesDatabase {
                     PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid axes.");
                     continue;
                 }
-                List<ItemStack> drops = deserializeItemStackList(resultSet.getString("drops"));
+                List<Drop> drops = deserializeDrops(resultSet.getString("drops"));
                 if (drops.isEmpty()) {
                     PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid drops.");
                     continue;
@@ -319,38 +320,17 @@ public class ResourcesDatabase {
                 .collect(Collectors.toList());
     }
 
-    private String serializeItemStackList(List<ItemStack> items) {
-        if (items == null || items.isEmpty()) {
-            return ""; // Return an empty string if the list is null or empty
-        }
-
-        return items.stream()
-                .map(item -> {
-                    YamlConfiguration config = new YamlConfiguration();
-                    config.set("item", item); // Store the ItemStack under a key
-                    return config.saveToString(); // Serialize to a YAML string
-                })
-                .collect(Collectors.joining(";")); // Join serialized strings with a semicolon
+    private String serializeDrops(List<Drop> drops) {
+        return drops.stream()
+                .map(Drop::serialize)
+                .collect(Collectors.joining(";"));
     }
 
-    private List<ItemStack> deserializeItemStackList(String serializedDrops) {
-        if (serializedDrops == null || serializedDrops.isEmpty()) {
-            return List.of(); // Return an empty list if the input is null or empty
-        }
-
-        return Arrays.stream(serializedDrops.split(";"))
-                .map(itemString -> {
-                    YamlConfiguration config = new YamlConfiguration();
-                    try {
-                        config.loadFromString(itemString); // Load the YAML string
-                        return config.getItemStack("item"); // Retrieve the ItemStack
-                    } catch (Exception e) {
-                        PluginLogger.debug("Failed to deserialize item stack: " + itemString);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull) // Filter out any null values
-                .toList();
+    private List<Drop> deserializeDrops(String dropsString) {
+        if (dropsString == null || dropsString.isEmpty()) return new ArrayList<>();
+        return Arrays.stream(dropsString.split(";"))
+                .map(Drop::deserialize)
+                .collect(Collectors.toList());
     }
 
 }

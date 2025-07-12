@@ -3,9 +3,14 @@ package lt.tomexas.mystcore.submodules.resources.managers;
 import lombok.Getter;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import org.bukkit.configuration.file.FileConfiguration;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigConstructor;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigRepresenter;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeSpawner;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.Yaml;
 
-import java.io.File;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,41 +20,65 @@ public class ConfigManager {
     private final String CONFIG_PATH = plugin.getDataFolder().getPath();
 
     @Getter
-    private final Map<String, FileConfiguration> fileConfigurations = new HashMap<>();
+    private final Map<String, TreeSpawner> fileConfigurations = new HashMap<>();
 
     public ConfigManager() {
-        loadTreeConfiguration();
+        loadTreeConfigurations();
     }
 
-    private void loadTreeConfiguration() {
+    private void loadTreeConfigurations() {
         File configDir = new File(CONFIG_PATH + "/trees/");
 
-        // Ensure the directory exists
         if (!configDir.exists()) {
-            saveDefaultConfig();
+            saveDefaultConfig(configDir);
         }
 
-        // List and iterate through the files
         File[] files = configDir.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isFile() && file.getName().endsWith(".yml")) {
                     plugin.getLogger().info("Found tree config file: " + file.getName());
-                    // You can load the configuration here if needed
-                    TreeConfigManager treeConfigManager = new TreeConfigManager(file.getName());
-                    FileConfiguration config = treeConfigManager.getConfig();
+                    TreeSpawner config = loadConfig(file);
                     this.fileConfigurations.put(file.getName(), config);
                 }
             }
         }
     }
 
-    public void saveDefaultConfig() {
-        File configFile = new File(CONFIG_PATH, "oak_tree_1.yml");
+    public void saveDefaultConfig(File configDir) {
+        if (!configDir.exists()) {
+            configDir.mkdirs();
+        }
+        File configFile = new File(configDir.getPath(), "oak_tree.yml");
 
         if (!configFile.exists()) {
-            plugin.saveResource("trees/oak_tree_1.yml", false);
-            PluginLogger.debug("Default config created: " + configFile.getPath());
+            TreeSpawner defaultSpawner = new TreeSpawner();
+
+            DumperOptions dumperOptions = new DumperOptions();
+            dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+            dumperOptions.setPrettyFlow(true);
+
+            TreeConfigRepresenter representer = new TreeConfigRepresenter(dumperOptions);
+
+            Yaml yaml = new Yaml(representer);
+            try (FileWriter writer = new FileWriter(configFile)) {
+                yaml.dump(defaultSpawner, writer);
+                PluginLogger.debug("Default config created: " + configFile.getPath());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private TreeSpawner loadConfig(File file) {
+        LoaderOptions loaderOptions = new LoaderOptions();
+        TreeConfigConstructor constructor = new TreeConfigConstructor(TreeSpawner.class, loaderOptions);
+
+        Yaml yaml = new Yaml(constructor);
+        try (FileReader reader = new FileReader(file)) {
+            return yaml.loadAs(reader, TreeSpawner.class);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

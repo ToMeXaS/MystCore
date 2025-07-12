@@ -8,6 +8,7 @@ import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import net.Indyuce.mmocore.MMOCore;
@@ -16,12 +17,9 @@ import net.Indyuce.mmocore.experience.EXPSource;
 import net.Indyuce.mmocore.experience.Profession;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.util.RayTraceResult;
 
 import java.util.*;
 
@@ -36,7 +34,7 @@ public class TreeChopperManager {
     private final Map<UUID, Boolean> glowingTrees = new HashMap<>();
 
     public TreeChopperManager() {
-        schedule();
+        new TreeDisplayManager();
     }
 
     public void handleChop(Player player, UUID entityId) {
@@ -89,9 +87,9 @@ public class TreeChopperManager {
         tree.removeHealthDisplay();
 
         if (tree.getDrops() != null) {
-            List<ItemStack> drops = new ArrayList<>(tree.getDrops()); // Clone the drops list
-            for (ItemStack drop : drops) {
-                HashMap<Integer, ItemStack> remaining = mystPlayer.getPlayer().getInventory().addItem(drop);
+            List<Drop> drops = new ArrayList<>(tree.getDrops()); // Clone the drops list
+            for (Drop drop : drops) {
+                HashMap<Integer, ItemStack> remaining = mystPlayer.getPlayer().getInventory().addItem(drop.getItemStack());
                 if (!remaining.isEmpty()) {
                     // If the item couldn't be fully added, drop the remaining items on the ground
                     for (ItemStack leftover : remaining.values()) {
@@ -357,70 +355,5 @@ public class TreeChopperManager {
 
         // Build the final string
         return progressBar.toString();
-    }
-
-    private void schedule() {
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                Bukkit.getOnlinePlayers().forEach(player -> {
-                    RayTraceResult result = player.rayTraceBlocks(5);
-                    if (result == null || result.getHitBlock() == null) return;
-                    Tree tree = Tree.getByRayTraceResult(result);
-                    if (tree == null) return;
-
-                    BlockFace blockFace = result.getHitBlockFace();
-                    if (blockFace == null) return;
-
-                    TextDisplay textDisplay = tree.getTextDisplay();
-                    TextDisplay healthDisplay = tree.getHealthDisplay();
-
-                    // Calculate yaw for the opposite block face
-                    BlockFace opposite = blockFace.getOppositeFace();
-                    float yaw = switch (opposite) {
-                        case SOUTH -> 180f;
-                        case EAST  -> 90f;
-                        case WEST  -> -90f;
-                        default -> 0f;
-                    };
-
-                    // Process textDisplay
-                    if (textDisplay != null) {
-                        Location textLoc = getTargetLocation(result, blockFace, 0.7);
-                        if (textLoc != null) {
-                            textLoc.setY(textDisplay.getY());
-                            textDisplay.teleport(textLoc);
-                            textDisplay.setRotation(yaw, 0f);
-                        } else {
-                            PluginLogger.debug("Target location is null for block: " + result.getHitBlock());
-                        }
-                    }
-
-                    // Process healthDisplay
-                    if (healthDisplay != null) {
-                        Location healthLoc = getTargetLocation(result, blockFace, 0.5);
-                        if (healthLoc != null) {
-                            healthLoc.setY(healthDisplay.getY());
-                            healthDisplay.teleport(healthLoc);
-                            healthDisplay.setRotation(yaw, 0f);
-                        } else {
-                            PluginLogger.debug("Target location is null for block: " + result.getHitBlock());
-                        }
-                    }
-                });
-            }
-        }.runTaskTimer(plugin, 0L, 20L); // Run every second
-    }
-
-    private Location getTargetLocation(RayTraceResult result, BlockFace blockFace, double distance) {
-        Block block = result.getHitBlock();
-        if (block == null) return null;
-        Location base = block.getLocation().clone().add(0.5, 0.5, 0.5);
-
-        return base.clone().add(
-                blockFace.getModX() * distance,
-                blockFace.getModY() * distance,
-                blockFace.getModZ() * distance
-        );
     }
 }

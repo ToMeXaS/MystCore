@@ -9,6 +9,7 @@ import com.ticxo.modelengine.api.model.ModeledEntity;
 import com.ticxo.modelengine.api.nms.entity.HitboxEntity;
 import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import lt.tomexas.mystcore.submodules.resources.utils.PersistentDataUtil;
@@ -54,7 +55,7 @@ public class PlayerInteractListener implements Listener {
         String skillType = pdc.get(PersistentDataUtil.SKILL_TYPE, PersistentDataType.STRING);
         List<Skill> skillData = PersistentDataUtil.loadSkillsFromPDC(pdc);
         List<Axe> axes = PersistentDataUtil.loadAxesFromPDC(pdc);
-        List<ItemStack> drops = PersistentDataUtil.loadDropsFromPDC(pdc);
+        List<Drop> drops = PersistentDataUtil.loadDropsFromPDC(pdc);
 
         if (modelId == null || respawnTime == null || glowChance == null || skillType == null) {
             player.sendMessage("§cInvalid tree spawner item data!");

@@ -6,7 +6,7 @@ import org.bukkit.inventory.ItemStack;
 public record Axe(String item, int damage, int criticalHit) {
 
     public ItemStack getItemStack() {
-        return ItemManager.getItemStack(item);
+        return ItemManager.getItemStack(item, 1);
     }
 
     // Serialize the Axe object to a string

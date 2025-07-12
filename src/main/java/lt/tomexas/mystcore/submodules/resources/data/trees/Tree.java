@@ -13,7 +13,6 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,7 +46,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
     private final String skillType;
     private final List<Skill> skillData;
     private final List<Axe> axes;
-    private final List<ItemStack> drops;
+    private final List<Drop> drops;
 
     public Tree(@NotNull UUID uuid,
                 TextDisplay textDisplay,
@@ -59,7 +58,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
                 String skillType,
                 List<Skill> skillData,
                 List<Axe> axes,
-                List<ItemStack> drops) {
+                List<Drop> drops) {
         this.uuid = uuid;
         this.textDisplay = textDisplay;
 
@@ -181,9 +180,5 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
     @Override
     public List<Axe> getAxes() {
         return this.axes;
-    }
-
-    public void ifPresent(Object o) {
-
     }
 }
