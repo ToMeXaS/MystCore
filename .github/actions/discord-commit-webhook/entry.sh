@@ -37,7 +37,7 @@ for f in "${all_files[@]}"; do
   [ -z "$f" ] && continue
   fname=$(basename "$f")
   url="https://github.com/$REPO/blob/$GIT_HASH/$f"
-  line=" » [$fname]($url)
+  line=" → [$fname]($url)
 "
   new_length=$((current_length + ${#line}))
   if (( new_length > MAX_LENGTH )) || ((file_count >= max_files)); then
