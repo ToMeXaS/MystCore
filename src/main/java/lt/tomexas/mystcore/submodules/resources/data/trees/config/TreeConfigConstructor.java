@@ -1,6 +1,7 @@
 package lt.tomexas.mystcore.submodules.resources.data.trees.config;
 
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -19,6 +20,7 @@ public class TreeConfigConstructor extends Constructor {
         // Register property types for TreeSpawner
         TypeDescription spawnerDesc = new TypeDescription(TreeConfig.class);
         spawnerDesc.putListPropertyType("axes", Axe.class);
+        spawnerDesc.putListPropertyType("chopSound", ChopSound.class);
         spawnerDesc.putListPropertyType("skillLevelData", Skill.class);
         spawnerDesc.putListPropertyType("drops", Drop.class);
 
@@ -50,6 +52,14 @@ public class TreeConfigConstructor extends Constructor {
             return new Drop(
                     (String) raw.get("item"),
                     asInt(raw.get("amount"))
+            );
+        }
+        if (node.getType() == ChopSound.class) {
+            Map<Object, Object> raw = constructMapping((MappingNode) node);
+            return new ChopSound(
+                    (String) raw.get("type"),
+                    asInt(raw.get("volume")),
+                    asInt(raw.get("pitch"))
             );
         }
         return super.constructObject(node);

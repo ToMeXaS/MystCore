@@ -3,6 +3,7 @@ package lt.tomexas.mystcore.managers;
 import com.nexomc.nexo.api.NexoItems;
 import com.nexomc.nexo.items.ItemBuilder;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
@@ -30,16 +31,17 @@ public class ItemManager {
      * @param config the configuration to load item data from
      * @return the created ItemStack, or null if the configuration is invalid
      */
-    public static ItemStack getItemStack(TreeConfig config) {
+    public static ItemStack getTreeSpawnerFromConfig(TreeConfig config) {
         String modelId = config.getModelId();
         int respawnTime = config.getRespawnTime();
         int glowChance = config.getGlowChance();
         String skillType = config.getSkillType();
+        ChopSound chopSound = config.getChopSound();
         List<Skill> skills = config.getSkillLevelData();
         List<Axe> axes = config.getAxes();
         List<Drop> drops = config.getDrops();
 
-        if (!isValidConfig(modelId, respawnTime, glowChance, skillType, skills, axes, drops)) {
+        if (!isValidConfig(modelId, respawnTime, glowChance, skillType, chopSound, skills, axes, drops)) {
             return null;
         }
 
@@ -48,7 +50,7 @@ public class ItemManager {
         if (itemMeta == null) return null;
 
         PersistentDataContainer pdc = itemMeta.getPersistentDataContainer();
-        savePersistentData(pdc, modelId, respawnTime, glowChance, skillType, skills, axes, drops);
+        savePersistentData(pdc, modelId, respawnTime, glowChance, skillType, chopSound, skills, axes, drops);
 
         itemMeta.setEnchantmentGlintOverride(true);
         itemMeta.itemName(Component.text("§e`" + modelId + "` spawner"));
@@ -117,16 +119,18 @@ public class ItemManager {
      * @param respawnTime the respawn time
      * @param glowChance  the glow chance
      * @param skillType   the skill type
+     * @param chopSound   the chop sound
      * @param skills      the list of skills
      * @param axes        the list of axes
      * @param drops       the list of drops
      * @return true if the configuration is valid, false otherwise
      */
-    private static boolean isValidConfig(String modelId, int respawnTime, int glowChance, String skillType, List<?> skills, List<?> axes, List<Drop> drops) {
+    private static boolean isValidConfig(String modelId, int respawnTime, int glowChance, String skillType, ChopSound chopSound, List<?> skills, List<?> axes, List<Drop> drops) {
         return modelId != null && !modelId.isEmpty()
                 && respawnTime > 0
                 && glowChance >= 0
                 && skillType != null && !skillType.isEmpty()
+                && chopSound != null
                 && skills != null && !skills.isEmpty()
                 && axes != null && !axes.isEmpty()
                 && drops != null && !drops.isEmpty();
@@ -140,15 +144,17 @@ public class ItemManager {
      * @param respawnTime the respawn time
      * @param glowChance  the glow chance
      * @param skillType   the skill type
+     * @param chopSound   the chop sound
      * @param skills      the list of skills
      * @param axes        the list of axes
      * @param drops       the list of drops
      */
-    private static void savePersistentData(PersistentDataContainer pdc, String modelId, int respawnTime, int glowChance, String skillType, List<Skill> skills, List<Axe> axes, List<Drop> drops) {
+    private static void savePersistentData(PersistentDataContainer pdc, String modelId, int respawnTime, int glowChance, String skillType, ChopSound chopSound, List<Skill> skills, List<Axe> axes, List<Drop> drops) {
         pdc.set(PDCManager.MODEL_ID, PersistentDataType.STRING, modelId);
         pdc.set(PDCManager.RESPAWN_TIME, PersistentDataType.INTEGER, respawnTime);
         pdc.set(PDCManager.GLOW_CHANCE, PersistentDataType.INTEGER, glowChance);
         pdc.set(PDCManager.SKILL_TYPE, PersistentDataType.STRING, skillType);
+        PDCManager.saveChopSoundToPDC(pdc, chopSound);
         PDCManager.saveSkillsToPDC(pdc, skills);
         PDCManager.saveAxesToPDC(pdc, axes);
         PDCManager.saveDropsToPDC(pdc, drops);

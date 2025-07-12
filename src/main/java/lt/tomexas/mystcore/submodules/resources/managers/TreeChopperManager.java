@@ -7,11 +7,9 @@ import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.managers.EntityManager;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.data.trees.*;
 import lt.tomexas.mystcore.other.Animations;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
 import net.Indyuce.mmocore.MMOCore;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;
@@ -25,6 +23,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 
 public class TreeChopperManager {
+
+    private final Main plugin = Main.getInstance();
+    private final Map<String, TreeConfig> treeConfigs = plugin.getTreeConfigs();
     private static final int INACTIVITY_TIMEOUT = 30; // seconds
 
     private final Map<UUID, Double> hitCounts = new HashMap<>();
@@ -47,19 +48,21 @@ public class TreeChopperManager {
         if (!canHarvest(player, tree)) return;
         if (isAlreadyHarvestingDifferentTree(player, tree)) return;
         if (skill == null || axe == null) return;
+
+        TreeConfig config = treeConfigs.get(tree.getModelId());
+
         double playerAttackCooldown = player.getAttackCooldown();
         int baseDamage = axe.damage();
         double scaledDamage = (double) baseDamage * playerAttackCooldown;
         hitCounts.merge(entityId, scaledDamage, Double::sum);
-
-        player.sendMessage(Component.text(scaledDamage + " damage dealt to the tree!" + hitCounts.get(entityId) + " hits so far!"));
 
         tree.setHarvester(player);
         EntityManager.updateTextDisplay(entityId);
         resetInactivityTimer(player, entityId);
 
         EntityManager.updateHealthDisplay(mystPlayer, entityId, hits);
-        player.playSound(player.getLocation(), "block.wood.chop3", 1, 1);
+        ChopSound chopSound = config.getChopSound();
+        player.playSound(player.getLocation(), chopSound.type(), chopSound.volume(), chopSound.pitch());
 
         if (hits >= skill.health()) chopTree(mystPlayer, entityId);
     }

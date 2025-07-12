@@ -2,6 +2,7 @@ package lt.tomexas.mystcore.managers;
 
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import org.bukkit.NamespacedKey;
@@ -19,6 +20,7 @@ public class PDCManager {
     public static final NamespacedKey RESPAWN_TIME = new NamespacedKey(Main.getInstance(), "respawn_time");
     public static final NamespacedKey GLOW_CHANCE = new NamespacedKey(Main.getInstance(), "glow_chance");
     public static final NamespacedKey SKILL_TYPE = new NamespacedKey(Main.getInstance(), "skill_type");
+    public static final NamespacedKey CHOP_SOUND = new NamespacedKey(Main.getInstance(), "chop_sound");
     public static final NamespacedKey SKILL_DATA = new NamespacedKey(Main.getInstance(), "skill_data");
     public static final NamespacedKey AXES = new NamespacedKey(Main.getInstance(), "axes");
     public static final NamespacedKey DROPS = new NamespacedKey(Main.getInstance(), "drops");
@@ -27,7 +29,6 @@ public class PDCManager {
         // Constructor
     }
 
-    // Save a list of Skills to PersistentDataContainer
     public static void saveSkillsToPDC(PersistentDataContainer container, List<Skill> skills) {
         if (skills == null || skills.isEmpty()) {
             container.remove(SKILL_DATA); // Remove key if no skills
@@ -53,7 +54,6 @@ public class PDCManager {
         }
     }
 
-    // Load a list of Skills from PersistentDataContainer
     public static List<Skill> loadSkillsFromPDC(PersistentDataContainer container) {
         String serializedData = container.get(SKILL_DATA, PersistentDataType.STRING);
         if (serializedData == null || serializedData.isEmpty()) {
@@ -72,7 +72,6 @@ public class PDCManager {
         return skills;
     }
 
-    // Save a list of Axes to PersistentDataContainer
     public static void saveAxesToPDC(PersistentDataContainer container, List<Axe> axes) {
         if (axes == null || axes.isEmpty()) {
             container.remove(AXES); // Remove key if no axes
@@ -98,7 +97,6 @@ public class PDCManager {
         }
     }
 
-    // Load a list of Axes from PersistentDataContainer
     public static List<Axe> loadAxesFromPDC(PersistentDataContainer container) {
         String serializedData = container.get(AXES, PersistentDataType.STRING);
         if (serializedData == null || serializedData.isEmpty()) {
@@ -117,7 +115,6 @@ public class PDCManager {
         return axes;
     }
 
-    // Save a list of ItemStacks to PersistentDataContainer
     public static void saveDropsToPDC(PersistentDataContainer container, List<Drop> drops) {
         if (drops == null || drops.isEmpty()) {
             container.remove(DROPS); // Remove key if no axes
@@ -159,6 +156,28 @@ public class PDCManager {
         }
 
         return drops;
+    }
+
+    public static void saveChopSoundToPDC(PersistentDataContainer container, ChopSound chopSound) {
+        if (chopSound == null) {
+            container.remove(CHOP_SOUND); // Remove key if no chop sound
+            return;
+        }
+
+        try {
+            String serializedChopSound = chopSound.serialize();
+            container.set(CHOP_SOUND, PersistentDataType.STRING, serializedChopSound);
+        } catch (Exception e) {
+            logger.warning("Failed to serialize ChopSound: " + e.getMessage());
+        }
+    }
+
+    public static ChopSound loadChopSoundFromPDC(PersistentDataContainer container) {
+        String serializedChopSound = container.get(CHOP_SOUND, PersistentDataType.STRING);
+        if (serializedChopSound == null || serializedChopSound.isEmpty()) {
+            return null; // Return null if no chop sound is found
+        }
+        return ChopSound.deserialize(serializedChopSound);
     }
 
 }

@@ -44,6 +44,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
     private int respawnTime;
     private int glowChance;
     private String skillType;
+    private ChopSound chopSound;
     private List<Skill> skillData;
     private List<Axe> axes;
     private List<Drop> drops;
@@ -56,6 +57,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
                 int respawnTime,
                 int glowChance,
                 String skillType,
+                ChopSound chopSound,
                 List<Skill> skillData,
                 List<Axe> axes,
                 List<Drop> drops) {
@@ -70,6 +72,7 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
         this.respawnTime = respawnTime;
         this.glowChance = glowChance;
         this.skillType = skillType;
+        this.chopSound = chopSound;
         this.skillData = skillData;
         this.axes = axes;
         this.drops = drops;

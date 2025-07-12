@@ -1,6 +1,7 @@
 package lt.tomexas.mystcore.submodules.resources.data.trees.config;
 
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import org.yaml.snakeyaml.DumperOptions;
@@ -22,10 +23,19 @@ public class TreeConfigRepresenter extends Representer {
             map.put("uses", t.getUses());
             map.put("respawnTime", t.getRespawnTime());
             map.put("glowChance", t.getGlowChance());
+            map.put("chopSound", t.getChopSound());
             map.put("skillType", t.getSkillType());
             map.put("skillLevelData", t.getSkillLevelData());
             map.put("axes", t.getAxes());
             map.put("drops", t.getDrops());
+            return representMapping(Tag.MAP, map, options.getDefaultFlowStyle());
+        });
+        this.representers.put(ChopSound.class, data -> {
+            ChopSound c = (ChopSound) data;
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("type", c.type());
+            map.put("volume", c.volume());
+            map.put("pitch", c.pitch());
             return representMapping(Tag.MAP, map, options.getDefaultFlowStyle());
         });
         this.representers.put(Skill.class, data -> {

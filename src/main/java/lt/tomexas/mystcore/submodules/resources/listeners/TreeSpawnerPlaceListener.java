@@ -1,10 +1,7 @@
 package lt.tomexas.mystcore.submodules.resources.listeners;
 
 import com.ticxo.modelengine.api.entity.Dummy;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.data.trees.*;
 import lt.tomexas.mystcore.managers.EntityManager;
 import lt.tomexas.mystcore.managers.ItemManager;
 import lt.tomexas.mystcore.managers.PDCManager;
@@ -46,6 +43,7 @@ public class TreeSpawnerPlaceListener implements Listener {
         Integer respawnTime = pdc.get(PDCManager.RESPAWN_TIME, PersistentDataType.INTEGER);
         Integer glowChance = pdc.get(PDCManager.GLOW_CHANCE, PersistentDataType.INTEGER);
         String skillType = pdc.get(PDCManager.SKILL_TYPE, PersistentDataType.STRING);
+        ChopSound chopSound = PDCManager.loadChopSoundFromPDC(pdc);
         List<Skill> skillData = PDCManager.loadSkillsFromPDC(pdc);
         List<Axe> axes = PDCManager.loadAxesFromPDC(pdc);
         List<Drop> drops = PDCManager.loadDropsFromPDC(pdc);
@@ -73,6 +71,7 @@ public class TreeSpawnerPlaceListener implements Listener {
                 respawnTime,
                 glowChance,
                 skillType,
+                chopSound,
                 skillData,
                 axes,
                 drops);

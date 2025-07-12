@@ -8,10 +8,7 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.data.trees.*;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -51,6 +48,7 @@ public class ResourcesDatabase {
                     respawnTime INTEGER NOT NULL,
                     glowChance INTEGER NOT NULL,
                     skillType TEXT NOT NULL,
+                    chopSound TEXT NOT NULL,
                     skillData TEXT NOT NULL,
                     axes TEXT NOT NULL,
                     drops TEXT NOT NULL
@@ -69,8 +67,8 @@ public class ResourcesDatabase {
             connection.prepareStatement("""
                 INSERT INTO
                 """ + DB_TABLE + """
-                (uuid, textEntityId, healthEntityId, location, barrierBlocks, modelId, respawnTime, glowChance, skillType, skillData, axes, drops)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (uuid, textEntityId, healthEntityId, location, barrierBlocks, modelId, respawnTime, glowChance, skillType, chopSound, skillData, axes, drops)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(uuid) DO UPDATE SET
                 textEntityId = excluded.textEntityId,
                 healthEntityId = excluded.healthEntityId,
@@ -80,6 +78,7 @@ public class ResourcesDatabase {
                 respawnTime = excluded.respawnTime,
                 glowChance = excluded.glowChance,
                 skillType = excluded.skillType,
+                chopSound = excluded.chopSound,
                 skillData = excluded.skillData,
                 axes = excluded.axes,
                 drops = excluded.drops
@@ -106,9 +105,10 @@ public class ResourcesDatabase {
                 preparedStatement.setInt(7, tree.getRespawnTime());
                 preparedStatement.setInt(8, tree.getGlowChance());
                 preparedStatement.setString(9, tree.getSkillType());
-                preparedStatement.setString(10, serializeSkillData(tree.getSkillData()));
-                preparedStatement.setString(11, serializeAxes(tree.getAxes()));
-                preparedStatement.setString(12, serializeDrops(tree.getDrops()));
+                preparedStatement.setString(10, tree.getChopSound().serialize());
+                preparedStatement.setString(11, serializeSkillData(tree.getSkillData()));
+                preparedStatement.setString(12, serializeAxes(tree.getAxes()));
+                preparedStatement.setString(13, serializeDrops(tree.getDrops()));
                 preparedStatement.addBatch(); // Add to batch
             }
 
@@ -169,6 +169,7 @@ public class ResourcesDatabase {
                     PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid skill type.");
                     continue;
                 }
+                ChopSound chopSound = ChopSound.deserialize(resultSet.getString("chopSound"));
                 List<Skill> skillData = deserializeSkillData(resultSet.getString("skillData"));
                 if (skillData.isEmpty()) {
                     PluginLogger.debug("Skipping tree with UUID " + uuid + " due to invalid skill data.");
@@ -213,6 +214,7 @@ public class ResourcesDatabase {
                         respawnTime,
                         glowChance,
                         skillType,
+                        chopSound,
                         skillData,
                         axes,
                         drops);

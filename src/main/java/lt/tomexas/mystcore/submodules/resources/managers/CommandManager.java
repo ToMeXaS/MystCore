@@ -50,7 +50,7 @@ public final class CommandManager {
             return;
         }
 
-        ItemStack item = ItemManager.getItemStack(config);
+        ItemStack item = ItemManager.getTreeSpawnerFromConfig(config);
         if (item == null) {
             player.sendMessage("§cFailed to create item stack from configuration.");
             return;

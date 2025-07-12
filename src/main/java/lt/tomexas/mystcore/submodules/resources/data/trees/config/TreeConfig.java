@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lt.tomexas.mystcore.submodules.resources.data.interfaces.ModelIdentifiable;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
+import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 
@@ -19,6 +20,7 @@ public class TreeConfig implements ModelIdentifiable {
     private int respawnTime = 30;
     private int glowChance = 20;
     private String skillType = "woodcutting";
+    private ChopSound chopSound = new ChopSound("block.wood.chop3", 1.0f, 1.0f);
     private List<Axe> axes = Arrays.asList(
             new Axe("minecraft:wooden_axe", 1, 5),
             new Axe("minecraft:stone_axe", 5, 10)
