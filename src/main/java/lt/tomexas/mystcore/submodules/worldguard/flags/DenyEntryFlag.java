@@ -13,7 +13,7 @@ import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 import lt.tomexas.mystcore.data.MystPlayer;
-import lt.tomexas.mystcore.submodules.worldguard.records.EntryCheckResult;
+import lt.tomexas.mystcore.submodules.worldguard.data.EntryCheckResult;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
@@ -25,7 +25,6 @@ public class DenyEntryFlag {
     public static IntegerFlag DENY_ENTRY_SKILL_LEVEL = new IntegerFlag("deny-entry-skill-level");
     public static StringFlag DENY_ENTRY_SKILL_MSG = new StringFlag("deny-entry-skill-msg");
 
-    // Call this from your plugin's onEnable()
     public static void register() {
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
         try {

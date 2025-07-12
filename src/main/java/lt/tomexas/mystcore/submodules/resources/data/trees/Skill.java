@@ -2,12 +2,10 @@ package lt.tomexas.mystcore.submodules.resources.data.trees;
 
 public record Skill(int level, double experience, double health, double stamina) {
 
-    // Serialize the Skill object to a string
     public String serialize() {
         return level + "/" + experience + "/" + health + "/" + stamina;
     }
 
-    // Deserialize a string back into a Skill object
     public static Skill deserialize(String serializedSkill) {
         if (serializedSkill == null || serializedSkill.isEmpty()) {
             throw new IllegalArgumentException("Invalid serialized skill format");

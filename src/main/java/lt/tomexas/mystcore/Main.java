@@ -57,6 +57,7 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         instance = this;
         initManagers();
+        initConfigs();
         registerEvents();
         registerCommands();
         registerPlaceholders();
@@ -121,7 +122,9 @@ public final class Main extends JavaPlugin {
 
     private void initManagers() {
         this.treeChopperManager = new TreeChopperManager();
+    }
 
+    private void initConfigs() {
         DumperOptions dumperOptions = new DumperOptions();
         dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
         dumperOptions.setPrettyFlow(true);
@@ -131,7 +134,7 @@ public final class Main extends JavaPlugin {
                 getDataFolder().getPath() + "/trees/oak_tree.yml",
                 new TreeConfigConstructor(TreeConfig.class, new LoaderOptions()),
                 new TreeConfigRepresenter(dumperOptions)
-                ).loadConfigDir();
+        ).loadConfigDir();
     }
 
     private void startPlayerTask() {

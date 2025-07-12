@@ -5,7 +5,7 @@ api-version: '1.21'
 commands:
     myst-resources:
       aliases: [myst-res, mr]
-      description: Main command for MystCore
+      description: Main command for MystCore Resources.
       permission: mystcore.admin
       permission-message: You do not have permission to use this command.
 depend:

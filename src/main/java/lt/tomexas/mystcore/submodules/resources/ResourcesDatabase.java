@@ -15,10 +15,8 @@ import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.TextDisplay;
-import org.bukkit.inventory.ItemStack;
 
 import java.io.File;
 import java.sql.*;
@@ -253,7 +251,6 @@ public class ResourcesDatabase {
         }
     }
 
-    // Serialization and Deserialization methods
     private String serializeLocation(Location location) {
         return location.getWorld().getName() + "," + location.getX() + "," + location.getY() + "," + location.getZ();
     }
