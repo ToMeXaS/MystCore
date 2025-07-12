@@ -29,21 +29,32 @@ current_length=0
 max_files=5
 MAX_LENGTH=900
 
-while IFS= read -r f; do
+# Get all changed files into an array first, so we can count them
+mapfile -t all_files < <(git diff --name-only "$GIT_HASH"^ "$GIT_HASH")
+total_files=${#all_files[@]}
+
+for f in "${all_files[@]}"; do
   [ -z "$f" ] && continue
   fname=$(basename "$f")
   url="https://github.com/$REPO/blob/$GIT_HASH/$f"
-  line="[$fname]($url)
-  "
+  line=" » [$fname]($url)
+"
   new_length=$((current_length + ${#line}))
   if (( new_length > MAX_LENGTH )) || ((file_count >= max_files)); then
-    CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and more files not shown."
+    remaining=$((total_files - file_count))
+    if (( remaining > 0 )); then
+      CHANGED_FILES_LIST="${CHANGED_FILES_LIST}...and $remaining more file(s) not shown."
+    fi
     break
   fi
   CHANGED_FILES_LIST="${CHANGED_FILES_LIST}${line}"
   current_length=$new_length
   ((file_count++))
-done < <(git diff --name-only "$GIT_HASH"^ "$GIT_HASH")
+done
+
+if [[ -z "$CHANGED_FILES_LIST" ]]; then
+  CHANGED_FILES_LIST="No files changed."
+fi
 
 if [[ -z "$CHANGED_FILES_LIST" ]]; then
   CHANGED_FILES_LIST="No files changed."
