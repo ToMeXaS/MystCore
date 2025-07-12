@@ -5,12 +5,13 @@ import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
 import com.ticxo.modelengine.api.entity.BaseEntity;
 import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
-import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
+import lt.tomexas.mystcore.managers.EntityManager;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.other.Animations;
 import net.Indyuce.mmocore.MMOCore;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;
@@ -24,11 +25,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 
 public class TreeChopperManager {
-    private final Main plugin = Main.getInstance();
-
     private static final int INACTIVITY_TIMEOUT = 30; // seconds
 
-    // Maps to track player interactions with trees
     private final Map<UUID, Double> hitCounts = new HashMap<>();
     private final Map<UUID, BukkitRunnable> inactivityTimers = new HashMap<>();
     private final Map<UUID, Boolean> glowingTrees = new HashMap<>();
@@ -46,7 +44,7 @@ public class TreeChopperManager {
         Axe axe = mystPlayer.getAxe(tree, player.getInventory().getItemInMainHand());
         double hits = hitCounts.getOrDefault(entityId, 0.0);
         if (isChoppedDown(player, tree)) return;
-        if (!canHarvestTree(player, tree)) return;
+        if (!canHarvest(player, tree)) return;
         if (isAlreadyHarvestingDifferentTree(player, tree)) return;
         if (skill == null || axe == null) return;
         double playerAttackCooldown = player.getAttackCooldown();
@@ -57,10 +55,10 @@ public class TreeChopperManager {
         player.sendMessage(Component.text(scaledDamage + " damage dealt to the tree!" + hitCounts.get(entityId) + " hits so far!"));
 
         tree.setHarvester(player);
-        updateTextDisplay(entityId);
+        EntityManager.updateTextDisplay(entityId);
         resetInactivityTimer(player, entityId);
 
-        updateHealthDisplay(mystPlayer, entityId, hits);
+        EntityManager.updateHealthDisplay(mystPlayer, entityId, hits);
         player.playSound(player.getLocation(), "block.wood.chop3", 1, 1);
 
         if (hits >= skill.health()) chopTree(mystPlayer, entityId);
@@ -81,7 +79,7 @@ public class TreeChopperManager {
                 .limit(2)
                 .forEach(block -> block.setType(Material.AIR));*/
 
-        IAnimationProperty animation = playTreeFallAnimation(tree);
+        IAnimationProperty animation = Animations.play(tree, Animations.ANIMATION_LIST.FALL);
         if (animation == null) return;
 
         //if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) setTreeGlow(entityId, false);
@@ -200,14 +198,6 @@ public class TreeChopperManager {
         }
     }
 
-    private IAnimationProperty playTreeFallAnimation(Tree tree) {
-        return ModelEngineAPI.getModeledEntity(tree.getUuid())
-                .getModel(tree.getModelId())
-                .orElseThrow(() -> new IllegalStateException("Model not found!"))
-                .getAnimationHandler()
-                .playAnimation("fall", 0.3, 0.3, 1, true);
-    }
-
     private void scheduleTreeRespawn(Tree tree, IAnimationProperty animation) {
         UUID entityId = tree.getUuid();
         new BukkitRunnable() {
@@ -240,70 +230,6 @@ public class TreeChopperManager {
         }
     }
 
-    /**
-     * Updates the text display for the tree entity.
-     *
-     * @param entityId the UUID of the tree entity
-     */
-    private void updateTextDisplay(UUID entityId) {
-        Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return;
-
-        TextDisplay textDisplay = tree.getTextDisplay();
-        if (textDisplay != null) {
-            textDisplay.text(Component.text("§6§l[" + tree.getHarvester().getName() + "]§f\n" + tree.getEntityText()));
-        }
-    }
-
-    private void updateHealthDisplay(MystPlayer mystPlayer, UUID entityId, double hits) {
-        Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return;
-        TextDisplay display = tree.getHealthDisplay();
-        Skill skill = mystPlayer.getSkill(tree);
-        if (skill == null) {
-            PluginLogger.debug("No skill found for tree " + tree + " and type " + tree.getSkillType());
-            return;
-        }
-        double health = skill.health() - hits;
-        int maxHealth = (int) skill.health();
-        health = Math.max(0, health);
-        if (display == null) display = createHealthDisplay(mystPlayer, entityId);
-        display.text(Component.text(getProgressBar(health, maxHealth)));
-    }
-
-    private TextDisplay createHealthDisplay(MystPlayer mystPlayer, UUID entityId) {
-        Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return null;
-        Location displayLocation = tree.getLocation().clone().add(0, -0.5, 0.5);
-
-        Player player = mystPlayer.getPlayer();
-        Location playerLoc = player.getLocation();
-
-        double dx = playerLoc.getX() - displayLocation.getX();
-        double dz = playerLoc.getZ() - displayLocation.getZ();
-
-        float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-
-        displayLocation.setYaw(yaw);
-
-        TextDisplay display = tree.getWorld().spawn(displayLocation, TextDisplay.class, textDisplay -> {
-            textDisplay.setBackgroundColor(Color.fromARGB(0, 0, 0, 0));
-            textDisplay.setShadowed(true);
-            textDisplay.setSeeThrough(false);
-            textDisplay.setViewRange(0.2f);
-            int health = (int) mystPlayer.getSkill(tree).health();
-            textDisplay.text(Component.text(getProgressBar(health, health)));
-        });
-
-        for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-            if (!mystPlayer.getPlayer().equals(onlinePlayer))
-                onlinePlayer.hideEntity(plugin, display);
-        }
-
-        tree.setHealthDisplay(display);
-        return display;
-    }
-
     private void resetTextDisplay(UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return;
@@ -314,7 +240,7 @@ public class TreeChopperManager {
         }
     }
 
-    private boolean canHarvestTree(Player player, Tree tree) {
+    private boolean canHarvest(Player player, Tree tree) {
         if (tree.getHarvester() != null && !player.equals(tree.getHarvester())) {
             player.sendMessage("§cSomeone else is harvesting this tree!");
             return false;
@@ -349,23 +275,4 @@ public class TreeChopperManager {
         }
         return null;
     }*/
-
-    public String getProgressBar(double progress, double maxProgress) {
-        double percentage = progress / maxProgress * 100.0;
-        StringBuilder progressBar = new StringBuilder();
-        double percentPerChar = 100.0 / 15; // Adjusted for 15 characters
-        char character = '▍';
-
-        for (int i = 0; i < 15; ++i) {
-            double progressPassBar = percentPerChar * (i + 1);
-            if (percentage >= progressPassBar) {
-                progressBar.append("§c").append(character);
-            } else {
-                progressBar.append("§7").append(character);
-            }
-        }
-
-        // Build the final string
-        return progressBar.toString();
-    }
 }

@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.playerfontimage;
+package lt.tomexas.mystcore.submodules.playerfontimage;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;

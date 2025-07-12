@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.submodules.resources.utils;
+package lt.tomexas.mystcore.managers;
 
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-public class PersistentDataUtil {
+public class PDCManager {
     private static final Main plugin = Main.getInstance();
     private static final Logger logger = plugin.getLogger();
     public static final NamespacedKey MODEL_ID = new NamespacedKey(Main.getInstance(), "model_id");
@@ -23,7 +23,7 @@ public class PersistentDataUtil {
     public static final NamespacedKey AXES = new NamespacedKey(Main.getInstance(), "axes");
     public static final NamespacedKey DROPS = new NamespacedKey(Main.getInstance(), "drops");
 
-    public PersistentDataUtil() {
+    public PDCManager() {
         // Constructor
     }
 

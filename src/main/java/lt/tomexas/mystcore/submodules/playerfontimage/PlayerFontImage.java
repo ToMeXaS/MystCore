@@ -1,6 +1,6 @@
-package lt.tomexas.mystcore.playerfontimage;
+package lt.tomexas.mystcore.submodules.playerfontimage;
 
-import lt.tomexas.mystcore.playerfontimage.impl.MinotarSource;
+import lt.tomexas.mystcore.submodules.playerfontimage.impl.MinotarSource;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;

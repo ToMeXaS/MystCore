@@ -13,3 +13,5 @@ depend:
   - 'ModelEngine'
   - 'WorldGuard'
   - "MMOCore"
+  - "MMOItems"
+  - "Nexo"

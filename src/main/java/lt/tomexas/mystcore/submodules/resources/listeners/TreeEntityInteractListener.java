@@ -3,7 +3,6 @@ package lt.tomexas.mystcore.submodules.resources.listeners;
 
 import com.ticxo.modelengine.api.events.BaseEntityInteractEvent;
 import lt.tomexas.mystcore.Main;
-import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
 import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
@@ -13,13 +12,13 @@ import org.bukkit.event.Listener;
 
 import java.util.UUID;
 
-public class BaseEntityInteractListener implements Listener {
+public class TreeEntityInteractListener implements Listener {
 
     private final Main plugin = Main.getInstance();
     private final TreeChopperManager treeChopperManager = plugin.getTreeChopperManager();
 
     @EventHandler
-    public void onEntityInteract(BaseEntityInteractEvent event) {
+    public void onTreeEntityInteract(BaseEntityInteractEvent event) {
         Player player = event.getPlayer();
         MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
         if (mystPlayer == null) return;

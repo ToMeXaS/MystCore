@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.playerfontimage;
+package lt.tomexas.mystcore.submodules.playerfontimage;
 
 /**
  * Enum representing different sources from which to retrieve player skin information.

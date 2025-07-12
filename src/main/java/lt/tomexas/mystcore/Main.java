@@ -7,13 +7,16 @@ import com.bgsoftware.superiorskyblock.api.wrappers.SuperiorPlayer;
 import lombok.Getter;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.listeners.*;
-import lt.tomexas.mystcore.playerfontimage.PlayerFontImage;
+import lt.tomexas.mystcore.submodules.playerfontimage.PlayerFontImage;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
-import lt.tomexas.mystcore.submodules.resources.listeners.BaseEntityInteractListener;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigConstructor;
+import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigRepresenter;
+import lt.tomexas.mystcore.submodules.resources.listeners.TreeEntityInteractListener;
 import lt.tomexas.mystcore.submodules.resources.ResourcesDatabase;
-import lt.tomexas.mystcore.submodules.resources.listeners.PlayerInteractListener;
+import lt.tomexas.mystcore.submodules.resources.listeners.TreeSpawnerPlaceListener;
 import lt.tomexas.mystcore.submodules.resources.commands.MystResourcesCommand;
-import lt.tomexas.mystcore.submodules.resources.managers.ConfigManager;
+import lt.tomexas.mystcore.managers.ConfigManager;
 import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
 import lt.tomexas.mystcore.submodules.worldguard.flags.DenyEntryFlag;
 import lt.tomexas.mystcore.submodules.worldguard.listeners.PlayerAreaEnterListener;
@@ -23,13 +26,12 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.LoaderOptions;
 
 import java.io.File;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public final class Main extends JavaPlugin {
@@ -42,13 +44,13 @@ public final class Main extends JavaPlugin {
     private PlayerFontImage playerFontImage;
 
     @Getter
-    private ConfigManager configManager;
+    private Map<String, TreeConfig> treeConfigs = new HashMap<>();
     @Getter
     private TreeChopperManager treeChopperManager;
 
     @Override
     public void onLoad() {
-        //registerWorldGuardFlags();
+        //registerWorldGuardFlags(); // Uncomment if you want to register WorldGuard flags on load
     }
 
     @Override
@@ -78,8 +80,8 @@ public final class Main extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new BlockBreakListener(), this);
         getServer().getPluginManager().registerEvents(new EntityDamageByEntityListener(), this);
-        getServer().getPluginManager().registerEvents(new BaseEntityInteractListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerInteractListener(), this);
+        getServer().getPluginManager().registerEvents(new TreeEntityInteractListener(), this);
+        getServer().getPluginManager().registerEvents(new TreeSpawnerPlaceListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerAreaEnterListener(), this);
     }
 
@@ -119,7 +121,17 @@ public final class Main extends JavaPlugin {
 
     private void initManagers() {
         this.treeChopperManager = new TreeChopperManager();
-        this.configManager = new ConfigManager();
+
+        DumperOptions dumperOptions = new DumperOptions();
+        dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        dumperOptions.setPrettyFlow(true);
+
+        this.treeConfigs = new ConfigManager<>(
+                TreeConfig.class,
+                getDataFolder().getPath() + "/trees/oak_tree.yml",
+                new TreeConfigConstructor(TreeConfig.class, new LoaderOptions()),
+                new TreeConfigRepresenter(dumperOptions)
+                ).loadConfigDir();
     }
 
     private void startPlayerTask() {

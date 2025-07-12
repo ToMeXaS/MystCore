@@ -1,6 +1,6 @@
 package lt.tomexas.mystcore;
 
-import lt.tomexas.mystcore.playerfontimage.impl.MinotarSource;
+import lt.tomexas.mystcore.submodules.playerfontimage.impl.MinotarSource;
 import org.bukkit.entity.Player;
 
 import java.sql.*;

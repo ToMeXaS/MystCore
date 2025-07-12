@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.submodules.resources.managers;
+package lt.tomexas.mystcore.managers;
 
 import com.nexomc.nexo.api.NexoItems;
 import com.nexomc.nexo.items.ItemBuilder;
@@ -6,7 +6,6 @@ import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
 import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
-import lt.tomexas.mystcore.submodules.resources.utils.PersistentDataUtil;
 import net.Indyuce.mmoitems.MMOItems;
 import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
 import net.kyori.adventure.text.Component;
@@ -146,13 +145,13 @@ public class ItemManager {
      * @param drops       the list of drops
      */
     private static void savePersistentData(PersistentDataContainer pdc, String modelId, int respawnTime, int glowChance, String skillType, List<Skill> skills, List<Axe> axes, List<Drop> drops) {
-        pdc.set(PersistentDataUtil.MODEL_ID, PersistentDataType.STRING, modelId);
-        pdc.set(PersistentDataUtil.RESPAWN_TIME, PersistentDataType.INTEGER, respawnTime);
-        pdc.set(PersistentDataUtil.GLOW_CHANCE, PersistentDataType.INTEGER, glowChance);
-        pdc.set(PersistentDataUtil.SKILL_TYPE, PersistentDataType.STRING, skillType);
-        PersistentDataUtil.saveSkillsToPDC(pdc, skills);
-        PersistentDataUtil.saveAxesToPDC(pdc, axes);
-        PersistentDataUtil.saveDropsToPDC(pdc, drops);
+        pdc.set(PDCManager.MODEL_ID, PersistentDataType.STRING, modelId);
+        pdc.set(PDCManager.RESPAWN_TIME, PersistentDataType.INTEGER, respawnTime);
+        pdc.set(PDCManager.GLOW_CHANCE, PersistentDataType.INTEGER, glowChance);
+        pdc.set(PDCManager.SKILL_TYPE, PersistentDataType.STRING, skillType);
+        PDCManager.saveSkillsToPDC(pdc, skills);
+        PDCManager.saveAxesToPDC(pdc, axes);
+        PDCManager.saveDropsToPDC(pdc, drops);
     }
 
 
@@ -171,5 +170,29 @@ public class ItemManager {
                         .map(drop -> "x" + drop.amount() + " " + drop.getItemStack().getType().name())
                         .collect(Collectors.joining(", ")))
         );
+    }
+
+    /**
+     * Checks if the given ItemStack is a valid spawner item.
+     *
+     * @param item the ItemStack to check
+     * @return true if the item is a valid spawner item, false otherwise
+     */
+    public static boolean isSpawnerItem(ItemStack item) {
+        if (item == null || item.getType().isAir() || !item.getType().equals(Material.OAK_SAPLING) || !item.hasItemMeta()) {
+            return false;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return false;
+
+        PersistentDataContainer pdc = meta.getPersistentDataContainer();
+
+        return pdc.has(PDCManager.MODEL_ID) &&
+                pdc.has(PDCManager.RESPAWN_TIME, PersistentDataType.INTEGER) &&
+                pdc.has(PDCManager.SKILL_TYPE, PersistentDataType.STRING) &&
+                pdc.has(PDCManager.SKILL_DATA, PersistentDataType.STRING) &&
+                pdc.has(PDCManager.AXES, PersistentDataType.STRING) &&
+                pdc.has(PDCManager.DROPS, PersistentDataType.STRING);
     }
 }

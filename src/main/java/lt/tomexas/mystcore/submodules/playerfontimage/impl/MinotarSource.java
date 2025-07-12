@@ -1,7 +1,7 @@
-package lt.tomexas.mystcore.playerfontimage.impl;
+package lt.tomexas.mystcore.submodules.playerfontimage.impl;
 
-import lt.tomexas.mystcore.playerfontimage.SkinSource;
-import lt.tomexas.mystcore.playerfontimage.SkinSourceEnum;
+import lt.tomexas.mystcore.submodules.playerfontimage.SkinSource;
+import lt.tomexas.mystcore.submodules.playerfontimage.SkinSourceEnum;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.OfflinePlayer;
 

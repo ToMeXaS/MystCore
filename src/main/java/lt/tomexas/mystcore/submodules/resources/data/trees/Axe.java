@@ -1,6 +1,6 @@
 package lt.tomexas.mystcore.submodules.resources.data.trees;
 
-import lt.tomexas.mystcore.submodules.resources.managers.ItemManager;
+import lt.tomexas.mystcore.managers.ItemManager;
 import org.bukkit.inventory.ItemStack;
 
 public record Axe(String item, int damage, int criticalHit) {

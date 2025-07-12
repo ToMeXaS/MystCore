@@ -2,6 +2,7 @@ package lt.tomexas.mystcore.submodules.resources.data.trees.config;
 
 import lombok.Getter;
 import lombok.Setter;
+import lt.tomexas.mystcore.submodules.resources.data.interfaces.ModelIdentifiable;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
 import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Getter
 @Setter
-public class TreeConfig {
+public class TreeConfig implements ModelIdentifiable {
 
     private String modelId = "oak_tree";
     private int uses = 1;
@@ -30,4 +31,9 @@ public class TreeConfig {
             new Drop("minecraft:oak_log", 1),
             new Drop("minecraft:apple", 2)
     );
+
+    @Override
+    public String getModelId() {
+        return modelId;
+    }
 }
