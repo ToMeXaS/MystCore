@@ -2,6 +2,7 @@ package lt.tomexas.mystcore.submodules.stats.stamina.listeners;
 
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.data.MystPlayer;
+import lt.tomexas.mystcore.data.enums.Permissions;
 import lt.tomexas.mystcore.submodules.stats.stamina.config.StaminaConfig;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.entity.Player;
@@ -21,7 +22,7 @@ public class EntityDamageByEntityListener implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player player) {
-            if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableBypass()) return;
+            if (player.hasPermission(Permissions.BYPASS_STAMINA.asString()) && config.isEnableBypass()) return;
             if (!config.isAttackEnabled()) return;
             MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
             if (mystPlayer == null) return;
@@ -40,10 +41,10 @@ public class EntityDamageByEntityListener implements Listener {
 
     public double getStaminaCost(Player player) {
         if (!config.isEnablePermissionDrain()) return config.getAttackCost();
-        Pattern pattern = Pattern.compile("mystcore.stamina.attack.drain\\.(\\d+)");
+        Pattern pattern = Permissions.STAMINA_ATTACK_DRAIN.asPattern();
         for (PermissionAttachmentInfo perm : player.getEffectivePermissions()) {
             Matcher matcher = pattern.matcher(perm.getPermission());
-            if (matcher.find()) {
+            if (matcher.matches()) {
                 return Double.parseDouble(matcher.group(1));
             }
         }

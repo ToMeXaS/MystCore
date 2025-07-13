@@ -75,8 +75,12 @@ public final class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         // Save any necessary data or perform cleanup here
-        saveResourcesData();
-        getLogger().info("MystCore has been disabled.");
+        try {
+            saveResourcesData();
+            getLogger().info("MystCore has been disabled.");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void registerWorldGuardFlags() {
@@ -106,8 +110,9 @@ public final class Main extends JavaPlugin {
         new Placeholders(this).register();
     }
 
-    private void saveResourcesData() {
+    private void saveResourcesData() throws SQLException {
         this.resourcesDatabase.addOrUpdateTrees(Tree.getAllTrees().keySet());
+        this.resourcesDatabase.closeConnection();
     }
 
     private void initDatabases() {

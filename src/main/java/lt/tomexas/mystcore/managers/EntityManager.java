@@ -4,6 +4,7 @@ import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.entity.Dummy;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
+import io.papermc.paper.advancement.AdvancementDisplay;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
@@ -104,23 +105,26 @@ public class EntityManager {
         if (tree == null) return null;
 
         Player player = mystPlayer.getPlayer();
-
         double maxDistance = 5.0;
-        RayTraceResult rayTrace = player.rayTraceBlocks(maxDistance);
+        RayTraceResult result = player.rayTraceBlocks(maxDistance);
 
-        if (rayTrace == null || rayTrace.getHitBlock() == null || rayTrace.getHitBlockFace() == null) return null;
+        if (result == null || result.getHitBlock() == null) return null;
 
-        Block hitBlock = rayTrace.getHitBlock();
-        BlockFace face = rayTrace.getHitBlockFace();
+        BlockFace blockFace = result.getHitBlockFace();
+        if (blockFace == null) return null;
 
-        Location displayLocation = hitBlock.getLocation().add(0.5, 0.5, 0.5);
-        displayLocation.add(face.getDirection().multiply(0.51));
+        // Calculate yaw for the opposite block face
+        BlockFace opposite = blockFace.getOppositeFace();
+        float yaw = switch (opposite) {
+            case SOUTH -> 180f;
+            case EAST  -> 90f;
+            case WEST  -> -90f;
+            default   -> 0f; // for NORTH and any other
+        };
 
-        Location playerLoc = player.getEyeLocation();
-        double dx = playerLoc.getX() - displayLocation.getX();
-        double dz = playerLoc.getZ() - displayLocation.getZ();
-        float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-        yaw = snapYaw(yaw);
+        // Calculate the display location: center of hit block, offset outwards by 0.5 on the face, Y set to tree Y + 1
+        Location displayLocation = result.getHitBlock().getLocation().add(0.5, 0.5, 0.5);
+        displayLocation.add(blockFace.getDirection().multiply(0.5));
         displayLocation.setYaw(yaw);
 
         TextDisplay display = tree.getWorld().spawn(displayLocation, TextDisplay.class, textDisplay -> {
@@ -139,22 +143,5 @@ public class EntityManager {
 
         tree.setHealthDisplay(display);
         return display;
-    }
-
-    private static float snapYaw(float yaw) {
-        // Normalize yaw to [-180, 180)
-        yaw = ((yaw + 180) % 360) - 180;
-        // Snap to closest allowed value
-        float[] allowed = {0, 90, -90, 180};
-        float closest = allowed[0];
-        float minDiff = Math.abs(yaw - allowed[0]);
-        for (int i = 1; i < allowed.length; i++) {
-            float diff = Math.abs(yaw - allowed[i]);
-            if (diff < minDiff) {
-                minDiff = diff;
-                closest = allowed[i];
-            }
-        }
-        return closest;
     }
 }

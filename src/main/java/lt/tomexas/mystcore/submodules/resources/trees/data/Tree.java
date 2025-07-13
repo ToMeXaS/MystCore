@@ -112,7 +112,6 @@ public class Tree implements SkillRequirementHolder, AxeRequirementHolder {
         if (this.healthDisplay != null) {
             this.healthDisplay.remove();
             this.healthDisplay = null;
-            PluginLogger.info("Removed health display for tree " + this.getName(this.modelId) + " at " + this.location.toVector().toString() + ".");
         }
 
     }

@@ -8,6 +8,7 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
+import lt.tomexas.mystcore.other.Animations;
 import lt.tomexas.mystcore.submodules.resources.trees.data.*;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -203,8 +204,7 @@ public class ResourcesDatabase {
 
                 }
 
-                if (dummy.isGlowing()) dummy.setGlowing(false);
-                stopFallingAnimation(uuid, modelId);
+                Animations.reset(uuid, modelId, Animations.ANIMATION_LIST.FALL);
 
                 new Tree(uuid,
                         textDisplay,
@@ -237,19 +237,6 @@ public class ResourcesDatabase {
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             Main.getInstance().getLogger().severe("Failed to remove tree from database: " + e.getMessage());
-        }
-    }
-
-    private void stopFallingAnimation(UUID uuid, String modelId) {
-        ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(uuid);
-        if (modeledEntity != null) {
-            ActiveModel activeModel = modeledEntity.getModel(modelId).orElse(null);
-            if (activeModel != null) {
-                AnimationHandler animationHandler = activeModel.getAnimationHandler();
-                if (animationHandler != null) {
-                    animationHandler.stopAnimation("fall");
-                }
-            }
         }
     }
 

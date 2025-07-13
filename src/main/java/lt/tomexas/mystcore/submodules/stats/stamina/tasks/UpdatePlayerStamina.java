@@ -2,6 +2,7 @@ package lt.tomexas.mystcore.submodules.stats.stamina.tasks;
 
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.data.MystPlayer;
+import lt.tomexas.mystcore.data.enums.Permissions;
 import lt.tomexas.mystcore.submodules.stats.stamina.config.StaminaConfig;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.Bukkit;
@@ -21,7 +22,7 @@ public class UpdatePlayerStamina extends BukkitRunnable {
     @Override
     public void run() {
         Bukkit.getOnlinePlayers().forEach(player -> {
-            if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableBypass()) return;
+            if (player.hasPermission(Permissions.BYPASS_STAMINA.asString()) && config.isEnableBypass()) return;
             MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
             if (mystPlayer == null) return;
             PlayerData playerData = mystPlayer.getPlayerData();
@@ -47,10 +48,10 @@ public class UpdatePlayerStamina extends BukkitRunnable {
 
     public double getStaminaCost(Player player) {
         if (!config.isEnablePermissionDrain()) return config.getSprintCost();
-        Pattern pattern = Pattern.compile("mystcore.stamina.sprint.drain\\.(\\d+)");
+        Pattern pattern = Permissions.STAMINA_SPRINT_DRAIN.asPattern();
         for (PermissionAttachmentInfo perm : player.getEffectivePermissions()) {
             Matcher matcher = pattern.matcher(perm.getPermission());
-            if (matcher.find()) {
+            if (matcher.matches()) {
                 return Double.parseDouble(matcher.group(1));
             }
         }

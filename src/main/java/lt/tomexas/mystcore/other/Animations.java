@@ -5,6 +5,8 @@ import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
 import lombok.Getter;
 import lt.tomexas.mystcore.submodules.resources.trees.data.Tree;
 
+import java.util.UUID;
+
 public class Animations {
 
     @Getter
@@ -25,6 +27,14 @@ public class Animations {
                 .orElseThrow(() -> new IllegalStateException("Model not found!"))
                 .getAnimationHandler()
                 .playAnimation(animation.getAnimationName(), 0.3, 0.3, 1, true);
+    }
+
+    public static void reset(UUID uuid, String modelId, ANIMATION_LIST animation) {
+        ModelEngineAPI.getModeledEntity(uuid)
+            .getModel(modelId)
+            .orElseThrow(() -> new IllegalStateException("Model not found!"))
+            .getAnimationHandler()
+            .stopAnimation(animation.getAnimationName());
     }
 
 }

@@ -7,10 +7,12 @@ import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
+import lt.tomexas.mystcore.data.enums.Permissions;
 import lt.tomexas.mystcore.managers.EntityManager;
 import lt.tomexas.mystcore.submodules.resources.trees.data.*;
 import lt.tomexas.mystcore.other.Animations;
 import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfig;
+import lt.tomexas.mystcore.submodules.stats.stamina.config.StaminaConfig;
 import net.Indyuce.mmocore.MMOCore;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import net.Indyuce.mmocore.experience.EXPSource;
@@ -27,6 +29,7 @@ public class TreeChopperManager {
 
     private final Main plugin = Main.getInstance();
     private final Map<String, TreeConfig> treeConfigs = plugin.getTreeConfigs();
+    private final StaminaConfig staminaConfig = plugin.getStaminaConfig();
     private static final int INACTIVITY_TIMEOUT = 30; // seconds
 
     private final Map<UUID, Double> hitCounts = new HashMap<>();
@@ -52,13 +55,13 @@ public class TreeChopperManager {
             player.sendMessage("§cYou're too tired to chop again so soon!");
             return;
         }
+        tree.setHarvester(player);
         if (isCriticalHit(mystPlayer, tree)) return;
 
         double baseDamage = axe.damage();
         double scaledDamage = baseDamage * playerAttackCooldown;
         hitCounts.merge(entityId, scaledDamage, Double::sum);
 
-        tree.setHarvester(player);
         EntityManager.updateTextDisplay(entityId);
         resetInactivityTimer(player, entityId);
 
@@ -105,9 +108,11 @@ public class TreeChopperManager {
             }
         }
 
-        mystPlayer.getPlayerData().setStamina(
-                PlayerData.get(mystPlayer.getPlayer().getUniqueId()).getStamina() - skill.stamina()
-        );
+        if (!staminaConfig.isEnableBypass() && !mystPlayer.getPlayer().hasPermission(Permissions.BYPASS_STAMINA.asString())) {
+            mystPlayer.getPlayerData().setStamina(
+                    PlayerData.get(mystPlayer.getPlayer().getUniqueId()).getStamina() - skill.stamina()
+            );
+        }
 
         Profession profession = MMOCore.plugin.professionManager.get("woodcutting");
         mystPlayer.getPlayerData().getCollectionSkills().giveExperience(profession, skill.experience(), EXPSource.SOURCE);
@@ -141,8 +146,13 @@ public class TreeChopperManager {
         Axe axe = mystPlayer.getAxe(tree);
         if (axe == null) return false;
 
+        TreeConfig config = treeConfigs.get(tree.getModelId());
+
         hitCounts.merge(entityId, axe.criticalHit(), Double::sum);
-        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5F, 1F);
+        player.playSound(player.getLocation(), config.getChopSound().type(), config.getChopSound().volume(), config.getChopSound().pitch());
+        resetInactivityTimer(player, entityId);
+        EntityManager.updateTextDisplay(entityId);
         EntityManager.updateHealthDisplay(mystPlayer, entityId, hitCounts.getOrDefault(entityId, 0.0));
 
         return true;
