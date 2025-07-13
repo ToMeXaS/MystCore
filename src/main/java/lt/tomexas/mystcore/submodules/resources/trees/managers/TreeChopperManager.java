@@ -5,6 +5,7 @@ import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
 import com.ticxo.modelengine.api.entity.BaseEntity;
 import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
+import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.managers.EntityManager;
 import lt.tomexas.mystcore.submodules.resources.trees.data.*;
@@ -30,41 +31,42 @@ public class TreeChopperManager {
 
     private final Map<UUID, Double> hitCounts = new HashMap<>();
     private final Map<UUID, BukkitRunnable> inactivityTimers = new HashMap<>();
-    private final Map<UUID, Boolean> glowingTrees = new HashMap<>();
 
     public TreeChopperManager() {
         new TreeDisplayManager();
     }
 
-    public void handleChop(Player player, UUID entityId) {
+    public void handleChop(MystPlayer mystPlayer, UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null || player == null || entityId == null) return;
-        MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
-        if (mystPlayer == null) return;
+        if (tree == null || mystPlayer == null || entityId == null) return;
         Skill skill = mystPlayer.getSkill(tree);
-        Axe axe = mystPlayer.getAxe(tree, player.getInventory().getItemInMainHand());
-        double hits = hitCounts.getOrDefault(entityId, 0.0);
+        Axe axe = mystPlayer.getAxe(tree);
+        Player player = mystPlayer.getPlayer();
         if (isChoppedDown(player, tree)) return;
         if (!canHarvest(player, tree)) return;
         if (isAlreadyHarvestingDifferentTree(player, tree)) return;
         if (skill == null || axe == null) return;
-
         TreeConfig config = treeConfigs.get(tree.getModelId());
-
         double playerAttackCooldown = player.getAttackCooldown();
-        int baseDamage = axe.damage();
-        double scaledDamage = (double) baseDamage * playerAttackCooldown;
+        if (playerAttackCooldown < 0.5) {
+            player.sendMessage("§cYou're too tired to chop again so soon!");
+            return;
+        }
+        if (isCriticalHit(mystPlayer, tree)) return;
+
+        double baseDamage = axe.damage();
+        double scaledDamage = baseDamage * playerAttackCooldown;
         hitCounts.merge(entityId, scaledDamage, Double::sum);
 
         tree.setHarvester(player);
         EntityManager.updateTextDisplay(entityId);
         resetInactivityTimer(player, entityId);
 
-        EntityManager.updateHealthDisplay(mystPlayer, entityId, hits);
+        EntityManager.updateHealthDisplay(mystPlayer, entityId, hitCounts.getOrDefault(entityId, 0.0));
         ChopSound chopSound = config.getChopSound();
         player.playSound(player.getLocation(), chopSound.type(), chopSound.volume(), chopSound.pitch());
 
-        if (hits >= skill.health()) chopTree(mystPlayer, entityId);
+        if (hitCounts.getOrDefault(entityId, 0.0) >= skill.health()) chopTree(mystPlayer, entityId);
     }
 
     private void chopTree(MystPlayer mystPlayer, UUID entityId) {
@@ -126,20 +128,25 @@ public class TreeChopperManager {
         return false;
     }
 
-    /*private void handleCriticalHit(Player player, Tree tree) {
+    private boolean isCriticalHit(MystPlayer mystPlayer, Tree tree) {
+        if (tree == null) return false;
         UUID entityId = tree.getUuid();
-        player.sendMessage("§c§l*CRITICAL HIT*");
-        Skill skill = getPlayerSkill(player, tree.getSkillType(), tree.getSkillData());
-        if (skill == null) return;
-        Axe axe = getPlayerAxe(player, tree.getAxes());
-        if (axe == null) return;
+        int randomValue = new Random().nextInt(100);
+        if (randomValue >= tree.getGlowChance()) return false;
 
-        int currentHits = hitCounts.getOrDefault(entityId, 0);
-        int remainingHits = (int) (skill.health() - currentHits);
-        hitCounts.put(entityId, currentHits + Math.min(axe.criticalHit(), remainingHits));
+        Player player = mystPlayer.getPlayer();
+        player.sendMessage("§c§l*CRITICAL HIT*");
+        Skill skill = mystPlayer.getSkill(tree);
+        if (skill == null) return false;
+        Axe axe = mystPlayer.getAxe(tree);
+        if (axe == null) return false;
+
+        hitCounts.merge(entityId, axe.criticalHit(), Double::sum);
         player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1, 1);
-        setTreeGlow(entityId, false);
-    }*/
+        EntityManager.updateHealthDisplay(mystPlayer, entityId, hitCounts.getOrDefault(entityId, 0.0));
+
+        return true;
+    }
 
     private boolean isChoppedDown(Player player, Tree tree) {
         if (tree.isChopped()) {
@@ -147,30 +154,6 @@ public class TreeChopperManager {
             return true;
         }
         return false;
-    }
-
-    private boolean isTreeGlowing(UUID entityId) {
-        Tree tree = Tree.getTreeByUuid(entityId);
-        if (tree == null) return false;
-        if (glowingTrees.containsKey(entityId)) {
-            return false; // Already glowing
-        }
-        int randomValue = new Random().nextInt(100);
-
-        if (randomValue < tree.getGlowChance()) { // 20% chance
-            setTreeGlow(entityId, true);
-            glowingTrees.put(entityId, true);
-            return true;
-        }
-
-        return false;
-    }
-
-    private void setTreeGlow(UUID entityId, boolean state) {
-        BaseEntity<?> entity = ModelEngineAPI.getModeledEntity(entityId).getBase();
-        if (!(entity instanceof Dummy<?> dummy)) return;
-        dummy.setGlowing(state);
-        dummy.setGlowColor(0xFFFFFF00);
     }
 
     private void resetInactivityTimer(Player player, UUID entityId) {
@@ -183,8 +166,6 @@ public class TreeChopperManager {
                 if (tree == null) return;
                 resetTextDisplay(entityId);
                 tree.removeHealthDisplay();
-                setTreeGlow(entityId, false);
-                glowingTrees.remove(entityId);
                 hitCounts.remove(entityId);
                 player.sendMessage("§cYou took too long to chop down the tree. Progress has been reset!");
             }
@@ -250,32 +231,4 @@ public class TreeChopperManager {
         }
         return true;
     }
-
-    /*private Skill getPlayerSkill(Player player, String skillType, List<Skill> skills) {
-        MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
-        if (mystPlayer == null) {
-            PluginLogger.debug("MystPlayer not found for player: " + player.getName());
-            return null;
-        }
-        PlayerData playerData = mystPlayer.getPlayerData();
-        int level = playerData.getCollectionSkills().getLevel(skillType);
-        Skill skill = skills.stream()
-                .max(Comparator.comparingInt(Skill::level))
-                .orElse(null);
-        if (skill == null) return null;
-        if (skill.level() <= level) {
-            return skill;
-        }
-        return null;
-    }*/
-
-    /*private Axe getPlayerAxe(Player player, List<Axe> axes) {
-        ItemStack itemInHand = player.getInventory().getItemInMainHand();
-        for (Axe axe : axes) {
-            if (axe.getItemStack().equals(itemInHand)) {
-                return axe;
-            }
-        }
-        return null;
-    }*/
 }

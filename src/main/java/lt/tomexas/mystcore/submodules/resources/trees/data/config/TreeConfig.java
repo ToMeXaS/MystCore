@@ -21,12 +21,12 @@ public class TreeConfig {
     private String skillType = "woodcutting";
     private ChopSound chopSound = new ChopSound("block.wood.chop3", 1.0f, 1.0f);
     private List<Axe> axes = Arrays.asList(
-            new Axe("minecraft:wooden_axe", 1, 5),
-            new Axe("minecraft:stone_axe", 5, 10)
+            new Axe("minecraft:wooden_axe", 1D, 5D),
+            new Axe("minecraft:stone_axe", 5D, 10D)
     );
     private List<Skill> skillLevelData = Arrays.asList(
-            new Skill(1, 10, 50, 50),
-            new Skill(5, 50, 30, 30)
+            new Skill(1, 10D, 50D, 50D),
+            new Skill(5, 50D, 30D, 30D)
     );
     private List<Drop> drops = Arrays.asList(
             new Drop("minecraft:oak_log", 1),

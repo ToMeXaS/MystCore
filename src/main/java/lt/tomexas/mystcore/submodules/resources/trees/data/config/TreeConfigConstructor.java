@@ -1,5 +1,6 @@
 package lt.tomexas.mystcore.submodules.resources.trees.data.config;
 
+import lt.tomexas.mystcore.other.NumParser;
 import lt.tomexas.mystcore.submodules.resources.trees.data.Axe;
 import lt.tomexas.mystcore.submodules.resources.trees.data.ChopSound;
 import lt.tomexas.mystcore.submodules.resources.trees.data.Drop;
@@ -34,42 +35,35 @@ public class TreeConfigConstructor extends Constructor {
             Map<Object, Object> raw = constructMapping((MappingNode) node);
             return new Axe(
                     (String) raw.get("item"),
-                    asInt(raw.get("damage")),
-                    asInt(raw.get("criticalHit"))
+                    NumParser.asDouble(raw.get("damage")),
+                    NumParser.asDouble(raw.get("criticalHit"))
             );
         }
         if (node.getType() == Skill.class) {
             Map<Object, Object> raw = constructMapping((MappingNode) node);
             return new Skill(
-                    asInt(raw.get("level")),
-                    asInt(raw.get("experience")),
-                    asInt(raw.get("health")),
-                    asInt(raw.get("stamina"))
+                    NumParser.asInt(raw.get("level")),
+                    NumParser.asDouble(raw.get("experience")),
+                    NumParser.asDouble(raw.get("health")),
+                    NumParser.asDouble(raw.get("stamina"))
             );
         }
         if (node.getType() == Drop.class) {
             Map<Object, Object> raw = constructMapping((MappingNode) node);
             return new Drop(
                     (String) raw.get("item"),
-                    asInt(raw.get("amount"))
+                    NumParser.asInt(raw.get("amount"))
             );
         }
         if (node.getType() == ChopSound.class) {
             Map<Object, Object> raw = constructMapping((MappingNode) node);
             return new ChopSound(
                     (String) raw.get("type"),
-                    asInt(raw.get("volume")),
-                    asInt(raw.get("pitch"))
+                    NumParser.asFloat(raw.get("volume")),
+                    NumParser.asFloat(raw.get("pitch"))
             );
         }
         return super.constructObject(node);
-    }
-
-    private int asInt(Object val) {
-        if (val instanceof Integer) return (Integer) val;
-        if (val instanceof Number) return ((Number) val).intValue();
-        if (val instanceof String) return Integer.parseInt((String) val);
-        throw new IllegalArgumentException("Cannot convert to int: " + val);
     }
 
 }

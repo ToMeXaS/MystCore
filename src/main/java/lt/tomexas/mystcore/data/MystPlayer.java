@@ -53,9 +53,9 @@ public class MystPlayer {
                 .orElse(null);
     }
 
-    public Axe getAxe(AxeRequirementHolder obj, ItemStack itemInHand) {
+    public Axe getAxe(AxeRequirementHolder obj) {
         return obj.getAxes().stream()
-                .filter(a -> a.getItemStack().isSimilar(itemInHand))
+                .filter(a -> a.getItemStack().isSimilar(this.player.getInventory().getItemInMainHand()))
                 .findFirst()
                 .orElse(null);
     }

@@ -29,6 +29,6 @@ public class TreeEntityInteractListener implements Listener {
         if (!mystPlayer.hasRequiredAxe(tree)) return;
         if (!mystPlayer.hasRequiredLevel(tree)) return;
         if (!mystPlayer.hasRequiredStamina(tree)) return;
-        treeChopperManager.handleChop(player, entityId);
+        this.treeChopperManager.handleChop(mystPlayer, entityId);
     }
 }

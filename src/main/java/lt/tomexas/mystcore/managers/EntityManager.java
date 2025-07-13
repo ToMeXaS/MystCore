@@ -16,8 +16,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
+import org.bukkit.util.RayTraceResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -100,16 +102,25 @@ public class EntityManager {
     private static TextDisplay createHealthDisplay(MystPlayer mystPlayer, UUID entityId) {
         Tree tree = Tree.getTreeByUuid(entityId);
         if (tree == null) return null;
-        Location displayLocation = tree.getLocation().clone().add(0, -0.5, 0.5);
 
         Player player = mystPlayer.getPlayer();
-        Location playerLoc = player.getLocation();
 
+        double maxDistance = 5.0;
+        RayTraceResult rayTrace = player.rayTraceBlocks(maxDistance);
+
+        if (rayTrace == null || rayTrace.getHitBlock() == null || rayTrace.getHitBlockFace() == null) return null;
+
+        Block hitBlock = rayTrace.getHitBlock();
+        BlockFace face = rayTrace.getHitBlockFace();
+
+        Location displayLocation = hitBlock.getLocation().add(0.5, 0.5, 0.5);
+        displayLocation.add(face.getDirection().multiply(0.51));
+
+        Location playerLoc = player.getEyeLocation();
         double dx = playerLoc.getX() - displayLocation.getX();
         double dz = playerLoc.getZ() - displayLocation.getZ();
-
         float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
-
+        yaw = snapYaw(yaw);
         displayLocation.setYaw(yaw);
 
         TextDisplay display = tree.getWorld().spawn(displayLocation, TextDisplay.class, textDisplay -> {
@@ -130,4 +141,20 @@ public class EntityManager {
         return display;
     }
 
+    private static float snapYaw(float yaw) {
+        // Normalize yaw to [-180, 180)
+        yaw = ((yaw + 180) % 360) - 180;
+        // Snap to closest allowed value
+        float[] allowed = {0, 90, -90, 180};
+        float closest = allowed[0];
+        float minDiff = Math.abs(yaw - allowed[0]);
+        for (int i = 1; i < allowed.length; i++) {
+            float diff = Math.abs(yaw - allowed[i]);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = allowed[i];
+            }
+        }
+        return closest;
+    }
 }

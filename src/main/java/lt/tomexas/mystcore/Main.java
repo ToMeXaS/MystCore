@@ -62,8 +62,8 @@ public final class Main extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        initManagers();
         initConfigs();
+        initManagers();
         registerEvents();
         registerCommands();
         registerPlaceholders();

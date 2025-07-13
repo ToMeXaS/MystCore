@@ -3,18 +3,16 @@ package lt.tomexas.mystcore.submodules.resources.trees.data;
 import lt.tomexas.mystcore.managers.ItemManager;
 import org.bukkit.inventory.ItemStack;
 
-public record Axe(String item, int damage, int criticalHit) {
+public record Axe(String item, double damage, double criticalHit) {
 
     public ItemStack getItemStack() {
         return ItemManager.getItemStack(item, 1);
     }
 
-    // Serialize the Axe object to a string
     public String serialize() {
         return item + "/" + damage + "/" + criticalHit;
     }
 
-    // Deserialize a string back into an Axe object
     public static Axe deserialize(String serializedAxe) {
         if (serializedAxe == null || serializedAxe.isEmpty()) {
             throw new IllegalArgumentException("Invalid serialized axe format");
@@ -26,8 +24,8 @@ public record Axe(String item, int damage, int criticalHit) {
         }
 
         String item = parts[0];
-        int damage = Integer.parseInt(parts[1]);
-        int criticalHit = Integer.parseInt(parts[2]);
+        double damage = Double.parseDouble(parts[1]);
+        double criticalHit = Double.parseDouble(parts[2]);
 
         return new Axe(item, damage, criticalHit);
     }
