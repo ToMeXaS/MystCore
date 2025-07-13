@@ -17,7 +17,7 @@ public class EntityDamageByEntityListener implements Listener {
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player player) {
-            if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableAdminBypass()) return;
+            if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableBypass()) return;
             MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
             if (mystPlayer == null) return;
             PlayerData playerData = mystPlayer.getPlayerData();

@@ -19,7 +19,7 @@ public class BlockBreakListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         Player player = event.getPlayer();
-        if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableAdminBypass()) return;
+        if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableBypass()) return;
         MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
         if (mystPlayer == null) return;
         PlayerData playerData = mystPlayer.getPlayerData();
