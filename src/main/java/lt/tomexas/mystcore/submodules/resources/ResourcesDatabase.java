@@ -8,6 +8,7 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
+import lt.tomexas.mystcore.managers.EntityManager;
 import lt.tomexas.mystcore.other.Animations;
 import lt.tomexas.mystcore.submodules.resources.trees.data.*;
 import org.bukkit.Location;
@@ -187,9 +188,9 @@ public class ResourcesDatabase {
                     continue;
                 }
                 BaseEntity<?> baseEntity = ModelEngineAPI.getModeledEntity(uuid).getBase();
-                if (!(baseEntity instanceof Dummy<?> dummy)) {
-                    PluginLogger.debug("Skipping tree with UUID " + uuid + " due to missing entity.");
-                    continue;
+                if (!(baseEntity instanceof Dummy<?>)) {
+                    EntityManager.spawnTreeModel(location, modelId);
+                    PluginLogger.warn("Tree model with UUID " + uuid + " spawned because it was missing.");
                 }
                 Entity textEntity = location.getWorld().getEntity(textEntityId);
                 if (!(textEntity instanceof TextDisplay textDisplay)) {

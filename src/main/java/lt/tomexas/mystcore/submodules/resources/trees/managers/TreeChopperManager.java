@@ -1,11 +1,7 @@
 package lt.tomexas.mystcore.submodules.resources.trees.managers;
 
-import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
-import com.ticxo.modelengine.api.entity.BaseEntity;
-import com.ticxo.modelengine.api.entity.Dummy;
 import lt.tomexas.mystcore.Main;
-import lt.tomexas.mystcore.PluginLogger;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.data.enums.Permissions;
 import lt.tomexas.mystcore.managers.EntityManager;
@@ -89,8 +85,6 @@ public class TreeChopperManager {
 
         IAnimationProperty animation = Animations.play(tree, Animations.ANIMATION_LIST.FALL);
         if (animation == null) return;
-
-        //if (Boolean.TRUE.equals(glowingTrees.remove(entityId))) setTreeGlow(entityId, false);
 
         tree.removeHealthDisplay();
 
