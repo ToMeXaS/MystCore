@@ -2,13 +2,11 @@ package lt.tomexas.mystcore.data;
 
 import lombok.Getter;
 import lombok.Setter;
-import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.submodules.resources.data.interfaces.AxeRequirementHolder;
-import lt.tomexas.mystcore.submodules.resources.data.interfaces.SkillRequirementHolder;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.trees.data.interfaces.AxeRequirementHolder;
+import lt.tomexas.mystcore.submodules.resources.trees.data.interfaces.SkillRequirementHolder;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Axe;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Skill;
 import net.Indyuce.mmocore.api.player.PlayerData;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
@@ -16,7 +14,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 @Getter

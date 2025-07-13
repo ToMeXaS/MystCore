@@ -1,10 +1,10 @@
-package lt.tomexas.mystcore.submodules.resources.data.trees;
+package lt.tomexas.mystcore.submodules.resources.trees.data;
 
 import lombok.Getter;
 import lombok.Setter;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.submodules.resources.data.interfaces.AxeRequirementHolder;
-import lt.tomexas.mystcore.submodules.resources.data.interfaces.SkillRequirementHolder;
+import lt.tomexas.mystcore.submodules.resources.trees.data.interfaces.AxeRequirementHolder;
+import lt.tomexas.mystcore.submodules.resources.trees.data.interfaces.SkillRequirementHolder;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;

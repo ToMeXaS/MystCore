@@ -8,16 +8,21 @@ import lombok.Getter;
 import lt.tomexas.mystcore.data.MystPlayer;
 import lt.tomexas.mystcore.listeners.*;
 import lt.tomexas.mystcore.submodules.playerfontimage.PlayerFontImage;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigConstructor;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfigRepresenter;
-import lt.tomexas.mystcore.submodules.resources.listeners.TreeEntityInteractListener;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Tree;
+import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfig;
+import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfigConstructor;
+import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfigRepresenter;
+import lt.tomexas.mystcore.submodules.resources.trees.listeners.TreeEntityInteractListener;
 import lt.tomexas.mystcore.submodules.resources.ResourcesDatabase;
-import lt.tomexas.mystcore.submodules.resources.listeners.TreeSpawnerPlaceListener;
+import lt.tomexas.mystcore.submodules.resources.trees.listeners.TreeSpawnerPlaceListener;
 import lt.tomexas.mystcore.submodules.resources.commands.MystResourcesCommand;
 import lt.tomexas.mystcore.managers.ConfigManager;
-import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
+import lt.tomexas.mystcore.submodules.resources.trees.managers.TreeChopperManager;
+import lt.tomexas.mystcore.submodules.stats.stamina.listeners.BlockBreakListener;
+import lt.tomexas.mystcore.submodules.stats.stamina.listeners.EntityDamageByEntityListener;
+import lt.tomexas.mystcore.submodules.stats.stamina.config.StaminaConfig;
+import lt.tomexas.mystcore.submodules.stats.stamina.config.StaminaConfigRepresenter;
+import lt.tomexas.mystcore.submodules.stats.stamina.tasks.UpdatePlayerStamina;
 import lt.tomexas.mystcore.submodules.worldguard.flags.DenyEntryFlag;
 import lt.tomexas.mystcore.submodules.worldguard.listeners.PlayerAreaEnterListener;
 import net.Indyuce.mmocore.api.player.PlayerData;
@@ -25,14 +30,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffectType;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
+import org.yaml.snakeyaml.constructor.Constructor;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public final class Main extends JavaPlugin {
 
@@ -45,6 +48,9 @@ public final class Main extends JavaPlugin {
 
     @Getter
     private Map<String, TreeConfig> treeConfigs = new HashMap<>();
+    @Getter
+    private StaminaConfig staminaConfig;
+
     @Getter
     private TreeChopperManager treeChopperManager;
 
@@ -63,7 +69,7 @@ public final class Main extends JavaPlugin {
         registerPlaceholders();
         initDatabases();
         initializePlayers();
-        startPlayerTask();
+        startPlayerTasks();
     }
 
     @Override
@@ -89,7 +95,11 @@ public final class Main extends JavaPlugin {
     private void registerCommands() {
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.registerCommand(new MystResourcesCommand());
-        manager.getCommandCompletions().registerAsyncCompletion("treeIds", c -> getTreeFileNames());
+        manager.getCommandCompletions().registerAsyncCompletion("treeIds", c ->
+                this.treeConfigs.keySet().stream()
+                        .filter(id -> id.startsWith(c.getInput()))
+                        .toList()
+        );
     }
 
     private void registerPlaceholders() {
@@ -135,18 +145,17 @@ public final class Main extends JavaPlugin {
                 new TreeConfigConstructor(TreeConfig.class, new LoaderOptions()),
                 new TreeConfigRepresenter(dumperOptions)
         ).loadConfigDir();
+
+        this.staminaConfig = new ConfigManager<>(
+                StaminaConfig.class,
+                getDataFolder().getPath() + "/stats/stamina.yml",
+                new Constructor(StaminaConfig.class, new LoaderOptions()),
+                new StaminaConfigRepresenter(dumperOptions)
+        ).loadConfig();
     }
 
-    private void startPlayerTask() {
-        Bukkit.getScheduler().runTaskTimer(this, () -> {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
-                if (mystPlayer == null) continue;
-
-                updateIslandMembers(mystPlayer);
-                updatePlayerStamina(mystPlayer);
-            }
-        }, 0L, 20L); // Run every second
+    private void startPlayerTasks() {
+        new UpdatePlayerStamina().runTaskTimerAsynchronously(this, 0L, 20L);
     }
 
     private void updateIslandMembers(MystPlayer mystPlayer) {
@@ -160,33 +169,5 @@ public final class Main extends JavaPlugin {
             }
         }
         mystPlayer.setIslandMembers(islandMembers);
-    }
-
-    private void updatePlayerStamina(MystPlayer mystPlayer) {
-        Player player = mystPlayer.getPlayer();
-        PlayerData playerData = PlayerData.get(player);
-
-        if (player.isSprinting()) {
-            if (playerData.getStamina() > 2) {
-                playerData.setStamina(playerData.getStamina() - 3);
-            } else {
-                player.setFoodLevel(4);
-            }
-        }
-
-        if (playerData.getStamina() > 3) {
-            player.setFoodLevel(20);
-            player.removePotionEffect(PotionEffectType.MINING_FATIGUE);
-        }
-    }
-
-    private List<String> getTreeFileNames() {
-        File treesFolder = new File(getDataFolder(), "trees");
-        if (!treesFolder.isDirectory()) return Collections.emptyList();
-        File[] files = treesFolder.listFiles(File::isFile);
-        if (files == null) return Collections.emptyList();
-        return Arrays.stream(files)
-                .map(File::getName)
-                .collect(Collectors.toList());
     }
 }

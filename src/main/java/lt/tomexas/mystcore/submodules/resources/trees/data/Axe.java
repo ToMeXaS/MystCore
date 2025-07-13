@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.submodules.resources.data.trees;
+package lt.tomexas.mystcore.submodules.resources.trees.data;
 
 import lt.tomexas.mystcore.managers.ItemManager;
 import org.bukkit.inventory.ItemStack;

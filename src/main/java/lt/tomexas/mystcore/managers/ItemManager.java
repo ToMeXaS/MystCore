@@ -2,11 +2,11 @@ package lt.tomexas.mystcore.managers;
 
 import com.nexomc.nexo.api.NexoItems;
 import com.nexomc.nexo.items.ItemBuilder;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
-import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Axe;
+import lt.tomexas.mystcore.submodules.resources.trees.data.ChopSound;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Drop;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Skill;
+import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfig;
 import net.Indyuce.mmoitems.MMOItems;
 import net.Indyuce.mmoitems.api.item.mmoitem.MMOItem;
 import net.kyori.adventure.text.Component;

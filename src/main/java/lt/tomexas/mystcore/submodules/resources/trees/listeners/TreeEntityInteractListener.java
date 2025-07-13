@@ -1,11 +1,11 @@
-package lt.tomexas.mystcore.submodules.resources.listeners;
+package lt.tomexas.mystcore.submodules.resources.trees.listeners;
 
 
 import com.ticxo.modelengine.api.events.BaseEntityInteractEvent;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.data.MystPlayer;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
-import lt.tomexas.mystcore.submodules.resources.managers.TreeChopperManager;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Tree;
+import lt.tomexas.mystcore.submodules.resources.trees.managers.TreeChopperManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

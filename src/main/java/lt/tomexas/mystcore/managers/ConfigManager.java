@@ -1,19 +1,18 @@
 package lt.tomexas.mystcore.managers;
 
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.submodules.resources.data.interfaces.ModelIdentifiable;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Tree;
+import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfig;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class ConfigManager<T extends ModelIdentifiable> {
+public class ConfigManager<T> {
 
     private final Class<T> configClass;
     private final File configFile;
@@ -37,9 +36,8 @@ public class ConfigManager<T extends ModelIdentifiable> {
 
         if (files != null) {
             for (File file : files) {
-                T config = loadConfig(file); // Pass current file
-                String modelId = config.getModelId();
-                configs.put(modelId, config);
+                T config = loadConfig(file);
+                configs.put(file.getName().replace(".yml", ""), config);
 
                 // If T is TreeConfig, this works; otherwise adjust as needed
                 if (config instanceof TreeConfig treeConfig) {
@@ -75,6 +73,15 @@ public class ConfigManager<T extends ModelIdentifiable> {
         }
     }
 
+    public T loadConfig() {
+        Yaml yaml = new Yaml(yamlConstructor);
+        try (FileReader reader = new FileReader(configFile)) {
+            return yaml.loadAs(reader, configClass);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public T loadConfig(File file) {
         Yaml yaml = new Yaml(yamlConstructor);
         try (FileReader reader = new FileReader(file)) {
@@ -82,6 +89,16 @@ public class ConfigManager<T extends ModelIdentifiable> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public List<String> getDirFileNames() {
+        File folder = this.configFile.getParentFile();
+        if (!folder.isDirectory()) return Collections.emptyList();
+        File[] files = folder.listFiles(File::isFile);
+        if (files == null) return Collections.emptyList();
+        return Arrays.stream(files)
+                .map(File::getName)
+                .collect(Collectors.toList());
     }
 
 }

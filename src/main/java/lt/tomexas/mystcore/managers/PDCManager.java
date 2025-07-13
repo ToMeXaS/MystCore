@@ -1,10 +1,10 @@
 package lt.tomexas.mystcore.managers;
 
 import lt.tomexas.mystcore.Main;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Axe;
-import lt.tomexas.mystcore.submodules.resources.data.trees.ChopSound;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Drop;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Skill;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Axe;
+import lt.tomexas.mystcore.submodules.resources.trees.data.ChopSound;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Drop;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Skill;
 import org.bukkit.NamespacedKey;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;

@@ -1,7 +1,7 @@
-package lt.tomexas.mystcore.submodules.resources.listeners;
+package lt.tomexas.mystcore.submodules.resources.trees.listeners;
 
 import com.ticxo.modelengine.api.entity.Dummy;
-import lt.tomexas.mystcore.submodules.resources.data.trees.*;
+import lt.tomexas.mystcore.submodules.resources.trees.data.*;
 import lt.tomexas.mystcore.managers.EntityManager;
 import lt.tomexas.mystcore.managers.ItemManager;
 import lt.tomexas.mystcore.managers.PDCManager;

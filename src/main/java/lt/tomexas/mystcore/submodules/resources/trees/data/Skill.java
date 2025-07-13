@@ -1,4 +1,4 @@
-package lt.tomexas.mystcore.submodules.resources.data.trees;
+package lt.tomexas.mystcore.submodules.resources.trees.data;
 
 public record Skill(int level, double experience, double health, double stamina) {
 

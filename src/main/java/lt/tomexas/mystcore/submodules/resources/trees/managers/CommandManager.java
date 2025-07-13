@@ -1,10 +1,10 @@
-package lt.tomexas.mystcore.submodules.resources.managers;
+package lt.tomexas.mystcore.submodules.resources.trees.managers;
 
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.managers.ItemManager;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
-import lt.tomexas.mystcore.submodules.resources.data.trees.config.TreeConfig;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Tree;
+import lt.tomexas.mystcore.submodules.resources.trees.data.config.TreeConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

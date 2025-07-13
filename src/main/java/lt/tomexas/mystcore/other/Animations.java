@@ -3,7 +3,7 @@ package lt.tomexas.mystcore.other;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.animation.property.IAnimationProperty;
 import lombok.Getter;
-import lt.tomexas.mystcore.submodules.resources.data.trees.Tree;
+import lt.tomexas.mystcore.submodules.resources.trees.data.Tree;
 
 public class Animations {
 

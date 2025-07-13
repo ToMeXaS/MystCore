@@ -8,7 +8,7 @@ import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
 import lt.tomexas.mystcore.Main;
 import lt.tomexas.mystcore.PluginLogger;
-import lt.tomexas.mystcore.submodules.resources.data.trees.*;
+import lt.tomexas.mystcore.submodules.resources.trees.data.*;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
