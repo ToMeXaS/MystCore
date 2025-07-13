@@ -16,6 +16,7 @@ public class StaminaConfigRepresenter extends Representer {
             StaminaConfig t = (StaminaConfig) data;
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("enableBypass", t.isEnableBypass());
+            map.put("enablePermissionDrain", t.isEnablePermissionDrain());
             map.put("sprintEnabled", t.isSprintEnabled());
             map.put("sprintCost", t.getSprintCost());
             map.put("blockBreakEnabled", t.isBlockBreakEnabled());

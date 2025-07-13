@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class StaminaConfig {
     private boolean enableBypass = true;
+    private boolean enablePermissionDrain = false;
     private boolean sprintEnabled = true;
     private double sprintCost = 5;
     private boolean blockBreakEnabled = true;

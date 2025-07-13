@@ -8,8 +8,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BlockBreakListener implements Listener {
 
@@ -26,11 +30,25 @@ public class BlockBreakListener implements Listener {
 
         if (!config.isBlockBreakEnabled()) return;
 
+        double staminaCost = getStaminaCost(player);
+
         // Check if the player has enough stamina
-        if (playerData.getStamina() < config.getBlockBreakCost()) {
+        if (playerData.getStamina() < staminaCost) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 999999, 5, false, false));
             return;
         }
-        playerData.setStamina(playerData.getStamina() - config.getBlockBreakCost());
+        playerData.setStamina(playerData.getStamina() - getStaminaCost(player));
+    }
+
+    public double getStaminaCost(Player player) {
+        if (!config.isEnablePermissionDrain()) return config.getBlockBreakCost();
+        Pattern pattern = Pattern.compile("mystcore.stamina.blockbreak.drain\\.(\\d+)");
+        for (PermissionAttachmentInfo perm : player.getEffectivePermissions()) {
+            Matcher matcher = pattern.matcher(perm.getPermission());
+            if (matcher.find()) {
+                return Double.parseDouble(matcher.group(1));
+            }
+        }
+        return config.getBlockBreakCost();
     }
 }
