@@ -16,6 +16,7 @@ public class UpdatePlayerStamina extends BukkitRunnable {
     @Override
     public void run() {
         Bukkit.getOnlinePlayers().forEach(player -> {
+            if (player.hasPermission("mystcore.bypass.stamina") && config.isEnableAdminBypass()) return;
             MystPlayer mystPlayer = MystPlayer.getMystPlayer(player);
             if (mystPlayer == null) return;
             PlayerData playerData = mystPlayer.getPlayerData();
